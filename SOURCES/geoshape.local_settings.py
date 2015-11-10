@@ -8,16 +8,16 @@ DATABASES = {
     'default': {
          'ENGINE': 'django.db.backends.postgresql_psycopg2',
          'NAME': 'geonode',
-         'USER': 'geonode',
-         'PASSWORD': 'geonode',
+         'USER': 'geoshape',
+         'PASSWORD': 'geoshape',
      },
     # vector datastore for uploads
     'datastore' : {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         #'ENGINE': '', # Empty ENGINE name disables 
         'NAME': 'geonode_data',
-        'USER' : 'geonode',
-        'PASSWORD' : 'geonode',
+        'USER' : 'geoshape',
+        'PASSWORD' : 'geoshape',
         'HOST' : 'localhost',
         'PORT' : '5432',
     }

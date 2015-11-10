@@ -19,6 +19,7 @@ Source5:          geoshape.proxy.conf
 Source6:          geoshape.README
 Source7:          geoshape.local_settings.py
 Source8:          geoshape.robots.txt
+Source9:          geoshape-geonode-1.3.1.tar.gz
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
 Requires(pre):    /usr/sbin/useradd
 Requires(pre):    /usr/bin/getent
@@ -89,6 +90,7 @@ GEONODE_LIB=$RPM_BUILD_ROOT%{_localstatedir}/lib/geonode
 mkdir -p $GEONODE_LIB
 pushd $GEONODE_LIB
 git clone https://github.com/ROGUE-JCTD/rogue_geonode
+
 # create virtualenv
 virtualenv-2.7 .
 export PATH=/usr/pgsql-9.3/bin:$PATH
@@ -99,15 +101,15 @@ pushd rogue_geonode
 pip install .
 popd && popd
 
+# install geoshape_geonode from source
+tar -xf %{SOURCE9} -C .
+python geoshape-geonode-1.3.1/setup.py install 
+rm -fr geoshape-geonode-1.3.1
+
 # install Python GDAL, uWSGI, Supervisor
 pip install GDAL==1.11.2
 pip install uwsgi==1.9.17.1
 pip install supervisor==3.1.3
-
-# geonode python package does not install static directory
-GEONODE_PKG=$RPM_BUILD_ROOT%{_localstatedir}/lib/geonode/lib/python2.7/site-packages/geonode
-[ ! -d $GEONODE_PKG/static ] && install -m 755 %{SOURCE1} $GEONODE_PKG \
-&& unzip $GEONODE_PKG/static.zip -d $GEONODE_PKG && rm -f $GEONODE_PKG/static.zip 
 
 # setup supervisord configuration
 SUPV_ETC=$RPM_BUILD_ROOT%{_sysconfdir}
@@ -148,19 +150,19 @@ sed -i.bak "s|urlpatterns = patterns('',|urlpatterns = patterns('',\\n\
 url(r'^/robots\\\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),|" $RPM_BUILD_ROOT%{_localstatedir}/lib/geonode/rogue_geonode/%{name}/urls.py
 
 # setup envionment for geonode user
-echo "export PYTHONPATH=/var/lib/%{name}:/var/lib/%{name}/lib/python2.7/site-packages" >> $GEONODE_LIB/.bash_profile
-echo "alias python='/var/lib/%{name}/bin/python'" >> $GEONODE_LIB/.bash_profile
-echo "alias pip='python /var/lib/%{name}/bin/pip'" >> $GEONODE_LIB/.bash_profile
-echo "alias activate='source /var/lib/%{name}/bin/activate'" >> $GEONODE_LIB/.bash_profile
-echo "alias collectstatic='python /var/lib/%{name}/manage.py collectstatic'" >> $GEONODE_LIB/.bash_profile
-echo "alias syncdb='python /var/lib/%{name}/manage.py syncdb'" >> $GEONODE_LIB/.bash_profile
-echo "alias createsuperuser='python /var/lib/%{name}/manage.py createsuperuser'" >> $GEONODE_LIB/.bash_profile
+echo "export PYTHONPATH=/var/lib/geonode:/var/lib/geonode/lib/python2.7/site-packages" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias python='/var/lib/geonode/bin/python'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias pip='python /var/lib/geonode/bin/pip'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias activate='source /var/lib/geonode/bin/activate'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias collectstatic='python /var/lib/geonode/rogue_geonode/manage.py collectstatic'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias syncdb='python /var/lib/geonode/rogue_geonode/manage.py syncdb'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+echo "alias createsuperuser='python /var/lib/geonode/rogue_geonode/manage.py createsuperuser'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
 
 # GeoServer Install
 CX_ROOT=$RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost
 WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
 GS=$RPM_SOURCE_DIR/geoserver
-DATA=$RPM_BUILD_ROOT%{_localstatedir}/lib/geoserver/data
+DATA=$RPM_BUILD_ROOT%{_localstatedir}/lib/geoserver
 WAR_DATA=$RPM_SOURCE_DIR/data
 CX=$RPM_SOURCE_DIR/geoserver/WEB-INF/classes/org/geonode/security/geoserver.xml
 SQL=$RPM_SOURCE_DIR/geoserver/WEB-INF/classes/org/geonode/security/geonode_authorize_layer.sql
