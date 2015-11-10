@@ -1,0 +1,126 @@
+# Note: The following steps configure GeoNode, PostgreSQL and Geoserver with the localhost domains. See Steps below to change to a specific ip or domain name.
+
+# PostgreSQL setup
+sudo service postgresql-9.3 initdb
+sudo chkconfig postgresql-9.3 on
+sudo sed -i.bak "s/  peer/  trust/g" /var/lib/pgsql/9.3/data/pg_hba.conf
+sudo sed -i.bak "s/  ident/  md5/g" /var/lib/pgsql/9.3/data/pg_hba.conf
+sudo sed -i.bak "s/#listen_addresses = 'localhost'/listen_addresses = '*'/" /var/lib/pgsql/9.3/data/postgresql.conf
+sudo service postgresql-9.3 restart
+sudo psql -U postgres -c "CREATE USER geonode WITH PASSWORD 'geonode';"
+sudo psql -U postgres -c "CREATE DATABASE geonode OWNER geonode;"
+sudo psql -U postgres -c "CREATE DATABASE geonode_data OWNER geonode;"
+sudo psql -U postgres -d geonode_data -c 'CREATE EXTENSION postgis;'
+sudo psql -U postgres -d geonode_data -c 'GRANT ALL ON geometry_columns TO PUBLIC;'
+sudo psql -U postgres -d geonode_data -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'
+sudo psql -U geonode -d geonode < /var/lib/geoserver/geonode_authorize_layer.sql
+
+# Configure GeoNode
+sudo su - geonode
+collectstatic
+syncdb
+exit
+
+# Setup tomcat and start
+sudo chkconfig tomcat on
+sudo service tomcat start
+
+# Setup httpd and start
+sudo chkconfig httpd on
+sudo service httpd start
+
+# Start geonode service
+sudo service geonode start # endpoint - http://localhost
+
+# Configuration for selinux 
+sudo sed -i.bak "s/-A INPUT -i lo -j ACCEPT/-A INPUT -i lo -j ACCEPT\\n-A INPUT -p tcp -m tcp --dport 80 -j ACCEPT/" /etc/sysconfig/iptables 
+sudo setsebool -P httpd_can_network_connect=1 httpd_can_network_connect_db=1
+sudo service iptables restart
+
+
+###### Testing in non production environment
+# Start paver
+sudo su - geonode
+activate
+paver setup
+paver start -b 0.0.0.0:8001 # endpoint will be at http://localhost:8001
+# Stop paver
+sudo su - geonode # if not logged in as the geonode user
+paver stop
+deactivate
+
+###### Log File Locations
+# Tomcat version 7 - /var/log/tomcat/catalina.out
+# GeoServer version 2.7.0 - /var/lib/geoserver/logs/geoserver.log
+# uwsgi version 1.9.17.1 - /var/log/geonode/stderr.log and /var/log/geonode/stdout.log
+# PostgreSQL version 9.3 - /var/log/pgsql/9.3/data/pg_log/postgresql-%a.log
+# httpd version 2.2 - /var/log/httpd/error.log and /var/log/httpd/access.log
+
+###### Change GeoNode IP or Domain Name
+sudo vi /var/lib/geoserver/security/auth/geonodeAuthProvider/config.xml
+# modify <baseUrl></baseUrl> to reflect ip or domain name <baseUrl>http://example.com/</baseUrl>
+sudo service tomcat restart
+sudo su - geonode
+vi geonode/local_settings.py
+# modify SITEURL = "" to reflect SITEURL =  "http://example.com/"
+# modify ALLOWED_HOSTS = [''] to reflect ALLOWED_HOSTS = ['example.com']
+# modify 'PUBLIC_LOCATION' : '', to reflect 'PUBLIC_LOCATION' : 'http://example.com/geoserver',
+exit
+sudo service geonode restart
+
+###### Add classification-banner
+
+sudo vim /var/lib/geonode/geonode/templates/base.html
+
+{% load i18n avatar_tags %}
+{% load classification_banner %} <!-- Add This -->
+<!DOCTYPE html>
+
+...
+   {% block header %}
+      {% if classification_banner_enabled %} <!-- Add This -->
+        <link href="{{ STATIC_URL }}django_classification_banner/banner_classification.css" rel="stylesheet"/> <!-- Add This -->
+        {% classification_banner %} <!-- Add This -->
+      {% endif %} <!-- Add This -->
+      {{ block.super }} <!-- Add This -->
+
+
+vim /var/lib/geonode/geonode/maps/templates/maps/map_view.html
+
+{% extends "site_base.html" %}
+
+{% load i18n %}
+
+{% block title %} {% trans "GeoExplorer" %} - {{ block.super }} {% endblock %}
+
+{% block head %}
+    {% if classification_banner_enabled %} <!-- Add This -->
+          <link href="{{ STATIC_URL }}django_classification_banner/map_classification.css" rel="stylesheet"/> <!-- Add This -->
+        {% endif %} <!-- Add This -->
+{{ block.super }} <!-- Add This -->
+{% include 'maps/map_geoexplorer.js' %}
+
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+
+vim /etc/geonode/local_settings.py
+
+----
+# add the following
+from geonode.settings import *
+
+INSTALLED_APPS = INSTALLED_APPS + ('django_classification_banner',)
+TEMPLATE_CONTEXT_PROCESSORS = TEMPLATE_CONTEXT_PROCESSORS + ('django_classification_banner.context_processors.classification',)
+CLASSIFICATION_TEXT = 'Up to UNCLASSIFIED//FOUO'
+CLASSIFICATION_TEXT_COLOR = 'white'
+CLASSIFICATION_BACKGROUND_COLOR = 'green'
+#CLASSIFICATION_LINK = '/security'
+CLASSIFICATION_BANNER_ENABLED = True
+----
+
+sudo su - geonode
+collectstatic
+exit
+sudo service geonode restart
