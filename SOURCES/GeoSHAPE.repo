@@ -1,0 +1,11 @@
+[geoshape]
+name=geoshape
+baseurl=http://yum.geoshape.org/el6/x86_64
+enabled=1
+gpgcheck=0
+
+[opengeo]
+name=opengeo
+baseurl=http://yum.boundlessgeo.com/test/suite/v47/centos/6/x86_64
+enabled=1
+gpgcheck=0

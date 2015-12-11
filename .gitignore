@@ -20,7 +20,6 @@ __pycache__/
 *.war
 
 # RPM TEMP DIRS
-rpmbuild/SOURCES/mapstory
 rpmbuild/SOURCES/geoserver
 
 # RPMS
