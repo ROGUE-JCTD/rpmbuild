@@ -57,7 +57,7 @@ GEOSERVER_URL = SITEURL + 'geoserver/'
 OGC_SERVER = {
     'default' : {
         'BACKEND' : 'geonode.geoserver',
-        'LOCATION' : 'http://localhost:8080/geoserver/',
+        'LOCATION' : GEOSERVER_URL,
         'PUBLIC_LOCATION' : GEOSERVER_URL,
         'USER' : 'admin',
         'PASSWORD' : 'geoserver',
