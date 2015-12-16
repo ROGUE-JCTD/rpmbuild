@@ -72,6 +72,7 @@ Requires:         geos
 Requires:         %{name}-geoserver >= 2.6
 Requires:         rabbitmq-server >= 3.5.6
 Requires:         erlang >= 18.1
+Requires:         elasticsearch >= 1.6.0
 AutoReqProv:      no
 BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
