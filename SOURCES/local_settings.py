@@ -105,7 +105,7 @@ HAYSTACK_CONNECTIONS = {
         },
 }
 
-from geonode.settings import INSTALLED_APPS
+from geoshape.settings import INSTALLED_APPS
 
 INSTALLED_APPS += (
     'haystack',

@@ -69,7 +69,7 @@ Requires:         freetype
 Requires:         littlecms
 Requires:         proj
 Requires:         geos
-Requires:         %{name}-geoserver >= %{version}
+Requires:         %{name}-geoserver >= 2.6
 Requires:         rabbitmq-server >= 3.5.6
 Requires:         erlang >= 18.1
 AutoReqProv:      no
