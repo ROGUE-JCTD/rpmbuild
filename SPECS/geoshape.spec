@@ -1,6 +1,6 @@
 # Define Constants
 %define name geoshape
-%define version 1.5
+%define version 1.5.1
 %define release 0.1.beta%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -21,6 +21,7 @@ Source6:          local_settings.py
 Source7:          robots.txt
 Source8:          %{name}-config
 Source9:          file-service.war
+Source10:         geogig-cli-app-1.0.zip
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
 Requires(pre):    /usr/sbin/useradd
 Requires(pre):    /usr/bin/getent
@@ -68,7 +69,9 @@ Requires:         freetype
 Requires:         littlecms
 Requires:         proj
 Requires:         geos
-Requires:         %{name}-geoserver
+Requires:         %{name}-geoserver >= %{version}
+Requires:         rabbitmq-server >= 3.5.6
+Requires:         erlang >= 18.1
 AutoReqProv:      no
 BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
@@ -112,7 +115,8 @@ mkdir -p $SUPV_ETC
 install -m 644 %{SOURCE2} $SUPV_ETC/supervisord.conf
 GEOSHAPE_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/%{name}
 mkdir -p $GEOSHAPE_LOG
-
+CELERY_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/celery
+mkdir -p $CELERY_LOG
 # setup init script
 INITD=$RPM_BUILD_ROOT%{_sysconfdir}/init.d
 mkdir -p $INITD
@@ -148,10 +152,15 @@ LOCAL_BIN=$RPM_BUILD_ROOT%{_prefix}/local/bin
 mkdir -p $LOCAL_BIN
 install -m 755 %{SOURCE8} $LOCAL_BIN/
 
-#
+# file-service.war
 WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
 mkdir -p $WEBAPPS
 install -m 755 %{SOURCE9} $WEBAPPS/
+
+# geogig-cli
+unzip -d RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE10}
+PROFILE_D=$RPM_BUILD_ROOT%{_sysconfdir}/profile.d
+echo  "export GEOGIG_HOME=/var/lib/geogig && PATH=$PATH:$GEOGIG_HOME/bin" > $PROFILE_D/geogig.sh
 
 %pre
 getent group %{name} >/dev/null || groupadd -r %{name}
@@ -182,12 +191,15 @@ fi
 
 %files
 %defattr(755,%{name},%{name},755)
+%{_localstatedir}/lib/geogig
+%{_sysconfdir}/$PROFILE_D/geogig.sh
 %{_localstatedir}/lib/geonode
 %config(noreplace) %{_sysconfdir}/%{name}/local_settings.py
 %defattr(775,%{name},%{name},775)
 %dir %{_localstatedir}/lib/geonode/uwsgi/static
 %dir %{_localstatedir}/lib/geonode/uwsgi/uploaded
 %defattr(744,%{name},%{name},744)
+%dir %{_localstatedir}/log/celery
 %dir %{_localstatedir}/log/%{name}
 %defattr(644,%{name},%{name},644)
 %dir %{_sysconfdir}/%{name}/
@@ -203,5 +215,11 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5.1-1]
+- Updated geoshape.init to run all apps in supervisor.conf under the geoshape group
+- Added five celery workers to supervisor.conf
+- Added geogig-cli
+- Added rabbitmq-server >= 3.5.6 and erlang >= 18.1 as dependencies
+
 * Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5-1]
 - Updated geoshape-geonode to GeoNode==2.4

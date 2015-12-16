@@ -7,12 +7,13 @@ fi
 
 usage ()
 {
-  echo 'Usages:'
+  echo 'Usage:'
   echo '        geoshape-config database'
   echo '        geoshape-config init'
   echo '        geoshape-config selinux'
   echo '        geoshape-config updateip <public ip or domain>'
   echo '        geoshape-config updatelayers'
+  echo '        geoshape-config rebuild_index'
   echo '        geoshape-config syncdb'
   echo '        geoshape-config collectstatic'
   echo '        geoshape-config changepassword <username>'
@@ -20,12 +21,13 @@ usage ()
   echo '        geoshape-config shell'
   echo '        geoshape-config dbshell'
   echo '        geoshape-config start_all'
-  echo '        Details: restarts the tomcat, geoshape and httpd services'
+  echo '        Details: restarts all GeoSHAPE services'
   echo '        geoshape-config stop_all'
-  echo '        Details: stops the tomcat, geoshape and httpd services'
+  echo '        Details: stops all GeoSHAPE services'
   echo '        geoshape-config init <ip or domain>'
-  echo '        Details: chains together database, django, updateip, collectstatic,'
-  echo '        syncdb, selinux, start_all and createsuperuser'
+  echo '        Details: chains together database, django, updateip,'
+  echo '        collectstatic, syncdb, selinux, start_all,'
+  echo '        updatelayers, rebuildindex and createsuperuser'
   exit
 }
 
@@ -187,6 +189,11 @@ updatelayers()
   $PYTHON27 $MANAGE updatelayers -ignore-errors --remove-deleted --skip-unadvertised
 }
 
+rebuild_index()
+{
+  $PYTHON27 $MANAGE rebuild_index --noinput
+}
+
 shell()
 {
   $PYTHON27 $MANAGE shell
@@ -202,6 +209,12 @@ start_all()
   chkconfig tomcat on
   echo "Restarting tomcat service"
   service tomcat restart
+  chkconfig rabbitmq-server on
+  echo "Restarting rabbitmq-server service"
+  service rabbitmq-server restart
+  chkconfig elasticsearch on
+  echo "Restarting elasticsearch service"
+  service elasticsearch restart
   chkconfig geoshape on
   echo "Restarting geoshape service"
   service geoshape restart
@@ -214,6 +227,10 @@ stop_all()
 {
   echo "Stopping tomcat service"
   service tomcat stop
+  echo "Stopping rabbitmq-server service"
+  service rabbitmq-server stop
+  echo "Stopping elasticsearch service"
+  service elasticsearch stop
   echo "Stopping geoshape service"
   service geoshape stop
   echo "Stopping httpd service"
@@ -231,7 +248,10 @@ case "$1" in
           syncdb
           selinux
           start_all
+          echo "Waiting 90 seconds for services to start up"
+          sleep 90
           updatelayers
+          rebuild_index
           createsuperuser
         else
           echo "Usage: geoshape-config $1 <public domain or ip address>"
@@ -261,6 +281,10 @@ case "$1" in
         ;;
     updatelayers)
         updatelayers
+        RETVAL=$?
+        ;;
+    rebuild_index)
+        rebuild_index
         RETVAL=$?
         ;;
     syncdb)

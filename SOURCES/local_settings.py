@@ -92,10 +92,24 @@ CATALOGUE = {
     }
 }
 
-BROKER_URL = 'amqp://geoshape:geoshape@127.0.0.1:5672'
+BROKER_URL = 'amqp://guest@127.0.0.1:5672'
 CELERY_ALWAYS_EAGER = False
 NOTIFICATION_QUEUE_ALL = not CELERY_ALWAYS_EAGER
 NOTIFICATION_LOCK_LOCATION = '/var/lib/geonode/uwsgi'
+
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
+        'URL': 'http://127.0.0.1:9200/',
+        'INDEX_NAME': 'geonode',
+        },
+}
+
+from geonode.settings import INSTALLED_APPS
+
+INSTALLED_APPS += (
+    'haystack',
+)
 
 SLACK_ENABLED = False
 SLACK_WEBHOOK_URLS = ['']
