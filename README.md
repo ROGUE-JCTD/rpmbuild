@@ -23,6 +23,7 @@ __Note:__ devel rpms are needed only from buildign the GeoSHAPE rpms.
 - elasticsearch-1.6.0.noarch.rpm
 - erlang-18.1-1.el6.x86_64.rpm
 - rabbitmq-server-3.5.6-1.noarch.rpm
+
 [opengeo.zip - 51.2 MB](http://yum.geoshape.org/zip/opengeo.zip)
 - gdal-1.11.2-1.el6.x86_64.rpm
 - gdal-devel-1.11.2-1.el6.x86_64.rpm
@@ -41,6 +42,7 @@ __Note:__ devel rpms are needed only from buildign the GeoSHAPE rpms.
 - tomcat-jsp-2.2-api-7.0.33-4.el6.noarch.rpm
 - tomcat-lib-7.0.33-4.el6.noarch.rpm
 - tomcat-servlet-3.0-api-7.0.33-4.el6.noarch.rpm
+
 [python27.zip - 17.8 MB](http://yum.geoshape.org/zip/python27.zip)
 - python27-2.7.10-2.el6.x86_64.rpm
 - python27-devel-2.7.10-2.el6.x86_64.rpm
