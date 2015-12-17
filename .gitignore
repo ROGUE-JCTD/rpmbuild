@@ -28,3 +28,6 @@ rpmbuild/BUILDROOT
 rpmbuild/RPMS
 rpmbuild/SRPMS
 *.rpm
+
+# vagrant machines
+.vagrant

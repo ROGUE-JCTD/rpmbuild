@@ -22,12 +22,15 @@ Source7:          robots.txt
 Source8:          %{name}-config
 Source9:          file-service.war
 Source10:         geogig-cli-app-1.0.zip
+Source11:         admin.json
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
 Requires(pre):    /usr/sbin/useradd
 Requires(pre):    /usr/bin/getent
 Requires(pre):    bash
 Requires(postun): /usr/sbin/userdel
 Requires(postun): bash
+BuildRequires:    python27-devel
+BuildRequires:    python27-virtualenv
 BuildRequires:    gcc
 BuildRequires:    gcc-c++
 BuildRequires:    make
@@ -74,7 +77,6 @@ Requires:         rabbitmq-server >= 3.5.6
 Requires:         erlang >= 18.1
 Requires:         elasticsearch >= 1.6.0
 AutoReqProv:      no
-BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
 GeoShape is designed to enable collaboration on geospatial information between mission partners in connected and disconnected operations. GeoSHAPE has been built utilizing open source software and open standards to make it available for partners and to maximize interoperability.
@@ -149,9 +151,9 @@ sed -i.bak "s|urlpatterns = patterns('',|urlpatterns = patterns('',\\n\
 url(r'^/robots\\\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),|" $RPM_BUILD_ROOT%{_localstatedir}/lib/geonode/rogue_geonode/%{name}/urls.py
 
 # geoshape-config command
-LOCAL_BIN=$RPM_BUILD_ROOT%{_prefix}/local/bin
-mkdir -p $LOCAL_BIN
-install -m 755 %{SOURCE8} $LOCAL_BIN/
+USER_BIN=$RPM_BUILD_ROOT%{_prefix}/bin
+mkdir -p $USER_BIN
+install -m 755 %{SOURCE8} $USER_BIN/
 
 # file-service.war
 WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
@@ -159,9 +161,14 @@ mkdir -p $WEBAPPS
 install -m 755 %{SOURCE9} $WEBAPPS/
 
 # geogig-cli
-unzip -d RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE10}
+unzip -d $RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE10}
 PROFILE_D=$RPM_BUILD_ROOT%{_sysconfdir}/profile.d
-echo  "export GEOGIG_HOME=/var/lib/geogig && PATH=$PATH:$GEOGIG_HOME/bin" > $PROFILE_D/geogig.sh
+mkdir -p $PROFILE_D
+find $RPM_BUILD_ROOT%{_localstatedir}/lib/geogig -type f -name '*bat' -exec rm {} +
+echo  'export GEOGIG_HOME="/var/lib/geogig" && PATH="$PATH:$GEOGIG_HOME/bin"' > $PROFILE_D/geogig.sh
+
+# admin.json
+install -m 755 %{SOURCE11} $GEOSHAPE_CONF/
 
 %pre
 getent group %{name} >/dev/null || groupadd -r %{name}
@@ -170,19 +177,18 @@ getent passwd %{name} >/dev/null || useradd -r -d %{_localstatedir}/lib/geonode/
 %post
 if [ $1 -eq 1 ] ; then
   ln -s %{_sysconfdir}/%{name}/local_settings.py %{_localstatedir}/lib/geonode/rogue_geonode/%{name}/local_settings.py
+  source %{_sysconfdir}/profile.d/geogig.sh
 fi
 
 %preun
+find %{_localstatedir}/lib/geonode -type f -name '*pyc' -exec rm {} +
 if [ $1 -eq 0 ] ; then
+  /sbin/service tomcat stop > /dev/null 2>&1
   /sbin/service %{name} stop > /dev/null 2>&1
   /sbin/service httpd stop > /dev/null 2>&1
   /sbin/chkconfig --del %{name}
+  #remove soft link and virtual environment
   rm -fr %{_localstatedir}/lib/geonode
-  rm -fr %{_sysconfdir}/%{name}
-  rm -f %{_sysconfdir}/init.d/%{name}
-  rm -f %{_sysconfdir}/supervisord.conf
-  rm -f %{_sysconfdir}/httpd/conf.d/%{name}.conf
-  rm -f %{_sysconfdir}/httpd/conf.d/proxy.conf
 fi
 
 %postun
@@ -193,9 +199,10 @@ fi
 %files
 %defattr(755,%{name},%{name},755)
 %{_localstatedir}/lib/geogig
-%{_sysconfdir}/$PROFILE_D/geogig.sh
+%{_sysconfdir}/profile.d/geogig.sh
 %{_localstatedir}/lib/geonode
 %config(noreplace) %{_sysconfdir}/%{name}/local_settings.py
+%{_sysconfdir}/%{name}/admin.json
 %defattr(775,%{name},%{name},775)
 %dir %{_localstatedir}/lib/geonode/uwsgi/static
 %dir %{_localstatedir}/lib/geonode/uwsgi/uploaded
@@ -211,12 +218,12 @@ fi
 %config(noreplace) %{_sysconfdir}/supervisord.conf
 %defattr(-,root,root,-)
 %config %{_sysconfdir}/init.d/%{name}
-%{_prefix}/local/bin/%{name}-config
+%{_prefix}/bin/%{name}-config
 %attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/file-service.war
 %doc ../SOURCES/license/GNU
 
 %changelog
-* Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5.1-1]
+* Tue Dec 15 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5.1-1]
 - Updated geoshape.init to run all apps in supervisor.conf under the geoshape group
 - Added five celery workers to supervisor.conf
 - Added geogig-cli

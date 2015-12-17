@@ -33,6 +33,7 @@ usage ()
 
 # global values
 OPTIONS="$#"
+ARG="$1"
 VAR="$2"
 CHAR="[:alnum:]"
 IS_REPLACE=0
@@ -49,7 +50,7 @@ database()
     chkconfig postgresql-9.3 on
     sed -i.geoshape "s/  peer/  trust/g" /var/lib/pgsql/9.3/data/pg_hba.conf
     sed -i.geoshape "s/  ident/  md5/g" /var/lib/pgsql/9.3/data/pg_hba.conf
-    service postgresql-9.3 restart
+    service postgresql-9.3 restart > /dev/null 2>&1
   fi
   PGUSER=$(psql -U postgres -c '\du' | cut -d \| -f 1 | grep -w geoshape | wc -l)
   if [ $PGUSER == 0 ]
@@ -91,8 +92,8 @@ selinux()
   iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
   service iptables save
   setsebool -P httpd_can_network_connect=1 httpd_can_network_connect_db=1
-  service iptables restart
-  service httpd restart
+  service iptables restart > /dev/null 2>&1
+  service httpd restart > /dev/null 2>&1
 }
 
 syncdb()
@@ -107,8 +108,13 @@ collectstatic()
 
 changepassword()
 {
-  USER="$VAR"
-  $PYTHON27 $MANAGE changepassword $USER
+  if [ $ARG == "init" ]
+  then
+    $PYTHON27 $MANAGE changepassword admin
+  else
+    USER="$VAR"
+    $PYTHON27 $MANAGE changepassword $USER
+  fi
 }
 
 createsuperuser()
@@ -181,12 +187,12 @@ updateip()
       echo "done."
   fi
   echo "Restarting Apache HTTPD"
-  service httpd restart
+  service httpd restart > /dev/null 2>&1
 }
 
 updatelayers()
 {
-  $PYTHON27 $MANAGE updatelayers -ignore-errors --remove-deleted --skip-unadvertised
+  $PYTHON27 $MANAGE updatelayers --ignore-errors --remove-deleted --skip-unadvertised
 }
 
 rebuild_index()
@@ -207,20 +213,30 @@ dbshell()
 start_all()
 {
   chkconfig tomcat on
-  echo "Restarting tomcat service"
-  service tomcat restart
+  echo "Starting tomcat service"
+  service tomcat stop > /dev/null 2>&1
+  sleep 2
+  service tomcat start
   chkconfig rabbitmq-server on
-  echo "Restarting rabbitmq-server service"
-  service rabbitmq-server restart
+  echo "Starting rabbitmq-server service"
+  service rabbitmq-server stop > /dev/null 2>&1
+  sleep 2
+  service rabbitmq-server start
   chkconfig elasticsearch on
-  echo "Restarting elasticsearch service"
-  service elasticsearch restart
+  echo "Starting elasticsearch service"
+  service elasticsearch stop > /dev/null 2>&1
+  sleep 2
+  service elasticsearch start
   chkconfig geoshape on
-  echo "Restarting geoshape service"
-  service geoshape restart
+  echo "Starting geoshape service"
+  service geoshape stop > /dev/null 2>&1
+  sleep 2
+  service geoshape start
   chkconfig httpd on
-  echo "Restarting httpd service"
-  service httpd restart
+  echo "Starting httpd service"
+  service httpd stop > /dev/null 2>&1
+  sleep 2
+  service httpd start
 }
 
 stop_all()
@@ -250,9 +266,10 @@ case "$1" in
           start_all
           echo "Waiting 90 seconds for services to start up"
           sleep 90
+          $PYTHON27 $MANAGE loaddata $GEOSHAPE_ETC/admin.json
           updatelayers
           rebuild_index
-          createsuperuser
+          changepassword
         else
           echo "Usage: geoshape-config $1 <public domain or ip address>"
         fi

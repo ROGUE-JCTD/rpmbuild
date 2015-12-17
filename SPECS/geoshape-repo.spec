@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape-repo
-%define version 1.0.0
-%define release 1%{?dist}
+%define version 0.0.1
+%define release 0.1beta%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
