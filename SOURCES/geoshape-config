@@ -1,5 +1,4 @@
 #!/bin/bash
-#Need to add usage
 if [ "$EUID" -ne 0 ]
   then echo "geoshape-config requires root user access"
   exit
@@ -21,13 +20,17 @@ usage ()
   echo '        geoshape-config shell'
   echo '        geoshape-config dbshell'
   echo '        geoshape-config start_all'
-  echo '        Details: restarts all GeoSHAPE services'
+  echo '            restarts all GeoSHAPE services'
   echo '        geoshape-config stop_all'
-  echo '        Details: stops all GeoSHAPE services'
+  echo '            stops all GeoSHAPE services'
   echo '        geoshape-config init <ip or domain>'
-  echo '        Details: chains together database, django, updateip,'
-  echo '        collectstatic, syncdb, selinux, start_all,'
-  echo '        updatelayers, rebuildindex and createsuperuser'
+  echo '            chains together database, django, updateip,'
+  echo '            collectstatic, syncdb, selinux, start_all,'
+  echo '            updatelayers, rebuildindex and createsuperus'
+  echo '        geoshape-config maploom_dev'
+  echo '            modify geonode to point to the a build of maploom'
+  echo '            on the host machine to speedup the edit-build-test'
+  echo '            cycle of maploom'
   exit
 }
 
@@ -253,6 +256,35 @@ stop_all()
   service httpd stop
 }
 
+confirm_continue(){
+  while true; do
+    read -p "=> Are you sure you want to continue? " yn
+    case $yn in
+      [Yy]* ) break;;
+      [Nn]* ) echo "    Aborted script.";exit;;
+      * ) echo "    Please answer yes or no.";;
+    esac
+  done
+}
+
+maploom_dev()
+{
+  echo "  This script will modify geonode in this machine (guest machine) to point to the a build of maploom"
+  echo "  on the host machine to speedup the edit-build-test cycle of maploom. Make sure the"
+  echo "  /Maploom folder is sym-linked to MapLoom folder on the host machine which is a clone of the MapLoom" 
+  echo "  git repository and that you have built maploom."
+
+  confirm_continue
+
+  [ ! -d /MapLoom ] && echo 'Directory /Maploom not found. have you linked it to Maploom repo on host?'
+  [ ! -f /MapLoom/build/maploom.html ] && echo '/MapLoom/build/maploom.html not found. have you built maploom? e.g. \"grunt watch\" '
+
+  rm -rf /var/lib/geonode/lib/python2.7/site-packages/maploom/static/maploom/*
+  ln -s /MapLoom/build/* /var/lib/geonode/lib/python2.7/site-packages/maploom/static/maploom/
+  rm /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html
+  ln -s /MapLoom/build/maploom.html /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html
+}
+
 case "$1" in
     init)
         if [ $OPTIONS -eq 2 ];
@@ -339,6 +371,10 @@ case "$1" in
         ;;
     stop_all)
         stop_all
+        RETVAL=$?
+        ;;
+    maploom_dev)
+        maploom_dev
         RETVAL=$?
         ;;
     *)
