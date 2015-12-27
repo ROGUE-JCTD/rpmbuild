@@ -20,7 +20,6 @@ __pycache__/
 *.war
 
 # RPM TEMP DIRS
-rpmbuild/SOURCES/mapstory
 rpmbuild/SOURCES/geoserver
 
 # RPMS
@@ -29,3 +28,6 @@ rpmbuild/BUILDROOT
 rpmbuild/RPMS
 rpmbuild/SRPMS
 *.rpm
+
+# vagrant machines
+.vagrant

@@ -1,0 +1,383 @@
+#!/bin/bash
+if [ "$EUID" -ne 0 ]
+  then echo "geoshape-config requires root user access"
+  exit
+fi
+
+usage ()
+{
+  echo 'Usage:'
+  echo '        geoshape-config database'
+  echo '        geoshape-config init'
+  echo '        geoshape-config selinux'
+  echo '        geoshape-config updateip <public ip or domain>'
+  echo '        geoshape-config updatelayers'
+  echo '        geoshape-config rebuild_index'
+  echo '        geoshape-config syncdb'
+  echo '        geoshape-config collectstatic'
+  echo '        geoshape-config changepassword <username>'
+  echo '        geoshape-config createsuperuser'
+  echo '        geoshape-config shell'
+  echo '        geoshape-config dbshell'
+  echo '        geoshape-config start_all'
+  echo '            restarts all GeoSHAPE services'
+  echo '        geoshape-config stop_all'
+  echo '            stops all GeoSHAPE services'
+  echo '        geoshape-config init <ip or domain>'
+  echo '            chains together database, django, updateip,'
+  echo '            collectstatic, syncdb, selinux, start_all,'
+  echo '            updatelayers, rebuildindex and createsuperus'
+  echo '        geoshape-config maploom_dev'
+  echo '            modify geonode to point to the a build of maploom'
+  echo '            on the host machine to speedup the edit-build-test'
+  echo '            cycle of maploom'
+  exit
+}
+
+# global values
+OPTIONS="$#"
+ARG="$1"
+VAR="$2"
+CHAR="[:alnum:]"
+IS_REPLACE=0
+GEOSHAPE_ETC=/etc/geoshape
+GEOSERVER_DATA_DIR=/var/lib/geoserver_data
+CATALINA_ETC=/etc/tomcat/Catalina
+PYTHON27=/var/lib/geonode/bin/python2.7
+MANAGE=/var/lib/geonode/rogue_geonode/manage.py
+
+database()
+{
+  if [ ! -d /var/lib/pgsql/9.3/data/base ]; then
+    service postgresql-9.3 initdb
+    chkconfig postgresql-9.3 on
+    sed -i.geoshape "s/  peer/  trust/g" /var/lib/pgsql/9.3/data/pg_hba.conf
+    sed -i.geoshape "s/  ident/  md5/g" /var/lib/pgsql/9.3/data/pg_hba.conf
+    service postgresql-9.3 restart > /dev/null 2>&1
+  fi
+  PGUSER=$(psql -U postgres -c '\du' | cut -d \| -f 1 | grep -w geoshape | wc -l)
+  if [ $PGUSER == 0 ]
+  then
+    psqlpass=$(cat /dev/urandom | tr -cd "$CHAR" | head -c ${1:-16})
+    sed -i "s@\(DATABASE_PASSWORD[  ]*=[  ]*\).*@\1\'$psqlpass'@g" $GEOSHAPE_ETC/local_settings.py
+    psql -U postgres -c "CREATE USER geoshape WITH PASSWORD '$psqlpass';"
+  else
+    echo "geoshape user already created"
+    echo "you may need to manually set the django setting in local_settings.py"
+  fi
+  GEOSHAPE_DB=$(psql -U postgres -lqt | cut -d \| -f 1 | grep -w geoshape | wc -l)
+  if [ $GEOSHAPE_DB == 0 ]
+  then
+    psql -U postgres -c "CREATE DATABASE geoshape OWNER geoshape;"
+  else
+    echo "geoshape database already created"
+  fi
+  GEOSHAPE_DATA_DB=$(psql -U postgres -lqt | cut -d \| -f 1 | grep -w geoshape_data | wc -l)
+  if [ $GEOSHAPE_DATA_DB == 0 ]
+  then
+    psql -U postgres -c "CREATE DATABASE geoshape_data OWNER geoshape;"
+    psql -U postgres -d geoshape_data -c 'CREATE EXTENSION postgis;'
+    psql -U postgres -d geoshape_data -c 'GRANT ALL ON geometry_columns TO PUBLIC;'
+    psql -U postgres -d geoshape_data -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'
+  else
+    echo "geoshape_data database already created"
+  fi
+}
+
+django()
+{
+  secretkey=$(cat /dev/urandom | tr -cd "$CHAR" | head -c ${1:-32})
+  sed -i "s@\(SECRET_KEY[  ]*=[  ]*\).*@\1\'$secretkey'@g" $GEOSHAPE_ETC/local_settings.py
+}
+
+selinux()
+{
+  iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
+  service iptables save
+  setsebool -P httpd_can_network_connect=1 httpd_can_network_connect_db=1
+  service iptables restart > /dev/null 2>&1
+  service httpd restart > /dev/null 2>&1
+}
+
+syncdb()
+{
+  $PYTHON27 $MANAGE syncdb --noinput
+}
+
+collectstatic()
+{
+  $PYTHON27 $MANAGE collectstatic --noinput
+}
+
+changepassword()
+{
+  if [ $ARG == "init" ]
+  then
+    $PYTHON27 $MANAGE changepassword admin
+  else
+    USER="$VAR"
+    $PYTHON27 $MANAGE changepassword $USER
+  fi
+}
+
+createsuperuser()
+{
+  echo "Creating django/geoshape superuser"
+  $PYTHON27 $MANAGE createsuperuser
+}
+
+updateip()
+{
+  NEWIP="$VAR"
+  # Replace SITEURL in $GEOSHAPE_ETC/local_settings.py
+  echo "Replacing SITEURL value with '$NEWIP' in $GEOSHAPE_ETC/local_settings.py ... " | tr -d '\n'
+  sed -i "s@\(SITEURL[  ]*=[  ]*\).*@\1\'http://$NEWIP\/'@g" $GEOSHAPE_ETC/local_settings.py
+  echo "done."
+
+  echo "Adding entry for '$NEWIP' in $GEOSERVER_DATA_DIR/printing/config.yaml ... " | tr -d '\n'
+  printing_config=$GEOSERVER_DATA_DIR/printing/config.yaml
+
+  if grep -q "$NEWIP" "$printing_config"
+  then
+      echo "'$NEWIP' already found to the printing whitelist."
+  else
+      sed -i "s#hosts:#hosts:\n  - !ipMatch\n    ip: $NEWIP#g" $printing_config
+      echo "done."
+  fi
+
+  # if ALLOWED_HOSTS already exists ...
+  if grep -q "^[  ]*ALLOWED_HOSTS[  ]*=" "$GEOSHAPE_ETC/local_settings.py"
+  then
+      if [ $IS_REPLACE -eq 1 ]
+      then
+          echo "Replacing ALLOWED_HOSTS in $GEOSHAPE_ETC/local_settings.py ... " | tr -d '\n'
+          sed -i "s/^\([  ]*ALLOWED_HOSTS[  ]*=\).*/\1 [ 'localhost', '$NEWIP', ]/g" "$GEOSHAPE_ETC/local_settings.py"
+          echo "done."
+      else
+          echo "Adding $NEWIP to ALLOWED_HOSTS in $GEOSHAPE_ETC/local_settings.py ... " | tr -d '\n'
+          items="$(grep "^[   ]*ALLOWED_HOSTS[  ]*=" "$GEOSHAPE_ETC/local_settings.py" | \
+                   sed 's/^[  ]*ALLOWED_HOSTS[  ]*=[  ]*\[//g;s/\][   ]*$//g')"
+          already_found=0
+          oldifs="$IFS"
+          IFS=','
+          for item in $items
+          do
+              item_cls="$(echo "$item" | sed "s/^[  ]*['\"]//g;s/['\"][   ]*$//g")"
+              if [ "$item_cls" = "$NEWIP" ]
+              then
+                  already_found=1
+                  break
+              fi
+          done
+          IFS="$oldifs"
+          if [ $already_found -eq 0 ]
+          then
+              if echo "$items" | grep -q ',[  ]*$'
+              then
+                  items="${items}'$NEWIP', "
+              else
+                  items="${items}, '$NEWIP', "
+              fi
+              sed -i "s/^\([  ]*ALLOWED_HOSTS[  ]*=\).*/\1 [ $items ]/g" "$GEOSHAPE_ETC/local_settings.py"
+              echo "done."
+          else
+              echo "'$NEWIP' already found in ALLOWED_HOSTS list."
+          fi
+      fi
+  else
+      echo "Adding ALLOWED_HOSTS with in $GEOSHAPE_ETC/local_settings.py ... " | tr -d '\n'
+      echo "ALLOWED_HOSTS=['localhost', '$NEWIP', ]" >> $GEOSHAPE_ETC/local_settings.py
+      echo "done."
+  fi
+  echo "Restarting Apache HTTPD"
+  service httpd restart > /dev/null 2>&1
+}
+
+updatelayers()
+{
+  $PYTHON27 $MANAGE updatelayers --ignore-errors --remove-deleted --skip-unadvertised
+}
+
+rebuild_index()
+{
+  $PYTHON27 $MANAGE rebuild_index --noinput
+}
+
+shell()
+{
+  $PYTHON27 $MANAGE shell
+}
+
+dbshell()
+{
+  $PYTHON27 $MANAGE dbshell
+}
+
+start_all()
+{
+  chkconfig tomcat on
+  echo "Starting tomcat service"
+  service tomcat stop > /dev/null 2>&1
+  sleep 2
+  service tomcat start
+  chkconfig rabbitmq-server on
+  echo "Starting rabbitmq-server service"
+  service rabbitmq-server stop > /dev/null 2>&1
+  sleep 2
+  service rabbitmq-server start
+  chkconfig elasticsearch on
+  echo "Starting elasticsearch service"
+  service elasticsearch stop > /dev/null 2>&1
+  sleep 2
+  service elasticsearch start
+  chkconfig geoshape on
+  echo "Starting geoshape service"
+  service geoshape stop > /dev/null 2>&1
+  sleep 2
+  service geoshape start
+  chkconfig httpd on
+  echo "Starting httpd service"
+  service httpd stop > /dev/null 2>&1
+  sleep 2
+  service httpd start
+}
+
+stop_all()
+{
+  echo "Stopping tomcat service"
+  service tomcat stop
+  echo "Stopping rabbitmq-server service"
+  service rabbitmq-server stop
+  echo "Stopping elasticsearch service"
+  service elasticsearch stop
+  echo "Stopping geoshape service"
+  service geoshape stop
+  echo "Stopping httpd service"
+  service httpd stop
+}
+
+confirm_continue(){
+  while true; do
+    read -p "=> Are you sure you want to continue? " yn
+    case $yn in
+      [Yy]* ) break;;
+      [Nn]* ) echo "    Aborted script.";exit;;
+      * ) echo "    Please answer yes or no.";;
+    esac
+  done
+}
+
+maploom_dev()
+{
+  echo "  This script will modify geonode in this machine (guest machine) to point to the a build of maploom"
+  echo "  on the host machine to speedup the edit-build-test cycle of maploom. Make sure the"
+  echo "  /Maploom folder is sym-linked to MapLoom folder on the host machine which is a clone of the MapLoom" 
+  echo "  git repository and that you have built maploom."
+
+  confirm_continue
+
+  [ ! -d /MapLoom ] && echo 'Directory /Maploom not found. have you linked it to Maploom repo on host?'
+  [ ! -f /MapLoom/build/maploom.html ] && echo '/MapLoom/build/maploom.html not found. have you built maploom? e.g. \"grunt watch\" '
+
+  rm -rf /var/lib/geonode/lib/python2.7/site-packages/maploom/static/maploom/*
+  ln -s /MapLoom/build/* /var/lib/geonode/lib/python2.7/site-packages/maploom/static/maploom/
+  rm /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html
+  ln -s /MapLoom/build/maploom.html /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html
+}
+
+case "$1" in
+    init)
+        if [ $OPTIONS -eq 2 ];
+        then
+          database
+          django
+          updateip
+          collectstatic
+          syncdb
+          selinux
+          start_all
+          echo "Waiting 90 seconds for services to start up"
+          sleep 90
+          $PYTHON27 $MANAGE loaddata $GEOSHAPE_ETC/admin.json
+          updatelayers
+          rebuild_index
+          changepassword
+        else
+          echo "Usage: geoshape-config $1 <public domain or ip address>"
+        fi
+        RETVAL=$?
+        ;;
+    database)
+        database
+        RETVAL=$?
+        ;;
+    django)
+        django
+        RETVAL=$?
+        ;;
+    selinux)
+        selinux
+        RETVAL=$?
+        ;;
+    updateip)
+        if [ $OPTIONS -eq 2 ];
+        then
+          updateip
+        else
+          echo "Usage: geoshape-config $1 <public domain or ip address>"
+        fi
+        RETVAL=$?
+        ;;
+    updatelayers)
+        updatelayers
+        RETVAL=$?
+        ;;
+    rebuild_index)
+        rebuild_index
+        RETVAL=$?
+        ;;
+    syncdb)
+        syncdb
+        RETVAL=$?
+        ;;
+    collectstatic)
+        collectstatic
+        RETVAL=$?
+        ;;
+    changepassword)
+        if [ $OPTIONS -eq 2 ];
+        then
+          changepassword
+        else
+          echo "Usage: geoshape-config $1 <username>"
+        fi
+        RETVAL=$?
+        ;;
+    createsuperuser)
+        createsuperuser
+        RETVAL=$?
+        ;;
+    shell)
+        shell
+        RETVAL=$?
+        ;;
+    dbshell)
+        dbshell
+        RETVAL=$?
+        ;;
+    start_all)
+        start_all
+        RETVAL=$?
+        ;;
+    stop_all)
+        stop_all
+        RETVAL=$?
+        ;;
+    maploom_dev)
+        maploom_dev
+        RETVAL=$?
+        ;;
+    *)
+        usage
+        exit 1
+esac

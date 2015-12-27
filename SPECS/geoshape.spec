@@ -1,9 +1,10 @@
 # Define Constants
 %define name geoshape
-%define version 1.5
+%define version 1.5.1
 %define release 0.1.beta%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
+%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
 
 Name:             %{name}
 Version:          %{version}
@@ -11,88 +12,88 @@ Release:          %{release}
 Summary:          Geospatial capabilities for Security, Humanitarian Assistance, Partner Engagement
 Group:            Applications/Engineering
 License:          GPLv2
-Source1:          static.zip
-Source2:          geoshape.supervisord.conf
-Source3:          geoshape.init
-Source4:          geoshape.conf
-Source5:          geoshape.proxy.conf
-Source6:          geoshape.README
-Source7:          geoshape.local_settings.py
-Source8:          geoshape.robots.txt
-Source9:          geoshape-geonode-1.3.1.tar.gz
+Source1:          GeoNode-2.4.tar.gz
+Source2:          supervisord.conf
+Source3:          %{name}.init
+Source4:          %{name}.conf
+Source5:          proxy.conf
+Source6:          local_settings.py
+Source7:          robots.txt
+Source8:          %{name}-config
+Source9:          file-service.war
+Source10:         geogig-cli-app-1.0.zip
+Source11:         admin.json
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
 Requires(pre):    /usr/sbin/useradd
 Requires(pre):    /usr/bin/getent
 Requires(pre):    bash
 Requires(postun): /usr/sbin/userdel
 Requires(postun): bash
-BuildRequires:    python27
+BuildRequires:    python27-devel
 BuildRequires:    python27-virtualenv
-BuildRequires:    gdal-devel = 1.11.2
-BuildRequires:    proj-devel
-BuildRequires:    postgresql93-devel
-BuildRequires:    libxslt-devel
-BuildRequires:    pcre-devel
 BuildRequires:    gcc
 BuildRequires:    gcc-c++
+BuildRequires:    make
+BuildRequires:    expat-devel
+BuildRequires:    db4-devel
+BuildRequires:    gdbm-devel
+BuildRequires:    sqlite-devel
+BuildRequires:    readline-devel
+BuildRequires:    zlib-devel
+BuildRequires:    bzip2-devel
+BuildRequires:    openssl-devel
+BuildRequires:    tk-devel
+BuildRequires:    gdal-devel = 1.11.2
+BuildRequires:    libxslt-devel
+BuildRequires:    libxml2-devel
+BuildRequires:    libjpeg-turbo-devel
+BuildRequires:    zlib-devel
+BuildRequires:    libtiff-devel
+BuildRequires:    freetype-devel
+BuildRequires:    littlecms-devel
+BuildRequires:    proj-devel
+BuildRequires:    geos-devel
+BuildRequires:    postgresql93-devel
+BuildRequires:    unzip
 BuildRequires:    git
-BuildRequires:    libjpeg-devel
 Requires:         python27
 Requires:         python27-virtualenv
 Requires:         gdal = 1.11.2
 Requires:         postgresql93
 Requires:         postgresql93-server
 Requires:         postgis21-postgresql93
-Requires:         proj
 Requires:         httpd
 Requires:         libxslt
-Requires:         libjpeg
-Requires:         %{name}-geoserver >= %{version}-%{release}
+Requires:         libxml2
+Requires:         libjpeg-turbo
+Requires:         zlib
+Requires:         libtiff
+Requires:         freetype
+Requires:         littlecms
+Requires:         proj
+Requires:         geos
+Requires:         %{name}-geoserver >= 2.6
+Requires:         rabbitmq-server >= 3.5.6
+Requires:         erlang >= 18.1
+Requires:         elasticsearch >= 1.6.0
 AutoReqProv:      no
-BuildRoot:        %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
-GeoShape is designed to enable collaboration on geospatial information between mission partners in connected and disconnected operations. GeoSHAPE has been built utilizing open source software and open standards to make it available for partners and to maximize interoperability. 
-
-%package geoserver
-Summary:       A version of GeoServer that is enhanced and designed for use with GeoShape %{version}.
-Group:         Development/Libraries
-BuildRequires: unzip
-Requires:      %{name} = %{version}-%{release}
-Requires:      tomcat
-Requires:      java-1.7.0-openjdk
-Conflicts:     geoserver
-Patch0:        geoshape.web.xml.patch
-Patch1:        geoshape.context.xml.patch
-BuildArch:     noarch
-
-%description geoserver
-GeoServer is built with the geoserver-geonode-ext, which extends GeoServer
-with certain JSON, REST, and security capabilites specifically for GeoShape %{version}-%{release}.
+GeoShape is designed to enable collaboration on geospatial information between mission partners in connected and disconnected operations. GeoSHAPE has been built utilizing open source software and open standards to make it available for partners and to maximize interoperability.
 
 %prep
-[ -d $RPM_SOURCE_DIR/geoserver ] && rm -rf $RPM_SOURCE_DIR/geoserver
-unzip $RPM_SOURCE_DIR/geoserver.war -d $RPM_SOURCE_DIR/geoserver
-[ -d $RPM_SOURCE_DIR/data ] && rm -rf $RPM_SOURCE_DIR/data
-unzip $RPM_SOURCE_DIR/data.zip -d $RPM_SOURCE_DIR/data
-pushd $RPM_SOURCE_DIR/geoserver
-
-%patch0 -p1
-%patch1 -p1
-
-popd
 
 %build
 
 %install
 # rogue and geonode
 GEONODE_LIB=$RPM_BUILD_ROOT%{_localstatedir}/lib/geonode
-mkdir -p $GEONODE_LIB
+mkdir -p $GEONODE_LIB/uwsgi/{static,uploaded/thumbs}
 pushd $GEONODE_LIB
-git clone https://github.com/ROGUE-JCTD/rogue_geonode
+git clone --depth 1 -b geoint https://github.com/boundlessgeo/rogue_geonode.git
 
 # create virtualenv
-virtualenv-2.7 .
+virtualenv .
 export PATH=/usr/pgsql-9.3/bin:$PATH
 source bin/activate
 
@@ -102,9 +103,9 @@ pip install .
 popd && popd
 
 # install geoshape_geonode from source
-tar -xf %{SOURCE9} -C .
-python geoshape-geonode-1.3.1/setup.py install 
-rm -fr geoshape-geonode-1.3.1
+tar -xf %{SOURCE1} -C .
+python GeoNode-2.4/setup.py install
+rm -fr GeoNode-2.4
 
 # install Python GDAL, uWSGI, Supervisor
 pip install GDAL==1.11.2
@@ -117,7 +118,8 @@ mkdir -p $SUPV_ETC
 install -m 644 %{SOURCE2} $SUPV_ETC/supervisord.conf
 GEOSHAPE_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/%{name}
 mkdir -p $GEOSHAPE_LOG
-
+CELERY_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/celery
+mkdir -p $CELERY_LOG
 # setup init script
 INITD=$RPM_BUILD_ROOT%{_sysconfdir}/init.d
 mkdir -p $INITD
@@ -138,140 +140,94 @@ grep -rl $VAR0 $VAR0 | xargs sed -i 's|'$VAR0'|'$VAR1'|g'
 # setup geoshape configuration directory
 GEOSHAPE_CONF=$RPM_BUILD_ROOT%{_sysconfdir}/%{name}
 mkdir -p $GEOSHAPE_CONF
-install -m 755 %{SOURCE6} $GEOSHAPE_CONF/README
-
-# additions to mapstory directory
 # local_settings.py
-install -m 755 %{SOURCE7} $GEONODE_LIB/rogue_geonode/%{name}/local_settings.py
+install -m 775 %{SOURCE6} $GEOSHAPE_CONF/local_settings.py
+
+# additions to geoshape directory
 # robots.txt
-install -m 755 %{SOURCE8} $GEONODE_LIB/rogue_geonode/%{name}/templates/robots.txt
+install -m 755 %{SOURCE7} $GEONODE_LIB/rogue_geonode/%{name}/templates/robots.txt
 # add robots.txt as a TemplateView in django original file is urls.py.bak
 sed -i.bak "s|urlpatterns = patterns('',|urlpatterns = patterns('',\\n\
 url(r'^/robots\\\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),|" $RPM_BUILD_ROOT%{_localstatedir}/lib/geonode/rogue_geonode/%{name}/urls.py
 
-# setup envionment for geonode user
-echo "export PYTHONPATH=/var/lib/geonode:/var/lib/geonode/lib/python2.7/site-packages" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias python='/var/lib/geonode/bin/python'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias pip='python /var/lib/geonode/bin/pip'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias activate='source /var/lib/geonode/bin/activate'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias collectstatic='python /var/lib/geonode/rogue_geonode/manage.py collectstatic'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias syncdb='python /var/lib/geonode/rogue_geonode/manage.py syncdb'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
-echo "alias createsuperuser='python /var/lib/geonode/rogue_geonode/manage.py createsuperuser'" >> $GEONODE_LIB/rogue_geonode/.bash_profile
+# geoshape-config command
+USER_BIN=$RPM_BUILD_ROOT%{_prefix}/bin
+mkdir -p $USER_BIN
+install -m 755 %{SOURCE8} $USER_BIN/
 
-# GeoServer Install
-CX_ROOT=$RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost
+# file-service.war
 WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
-GS=$RPM_SOURCE_DIR/geoserver
-DATA=$RPM_BUILD_ROOT%{_localstatedir}/lib/geoserver
-WAR_DATA=$RPM_SOURCE_DIR/data
-CX=$RPM_SOURCE_DIR/geoserver/WEB-INF/classes/org/geonode/security/geoserver.xml
-SQL=$RPM_SOURCE_DIR/geoserver/WEB-INF/classes/org/geonode/security/geonode_authorize_layer.sql
-mkdir -p $CX_ROOT $WEBAPPS
-cp -rp $CX $CX_ROOT
-cp -rp $GS $WEBAPPS
-if [ ! -d $DATA ]; then
-  mkdir -p $DATA
-  cp -R $WAR_DATA/* $DATA
-fi
-cp -rp $SQL $DATA
-rm -fr $GS
+mkdir -p $WEBAPPS
+install -m 755 %{SOURCE9} $WEBAPPS/
+
+# geogig-cli
+unzip -d $RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE10}
+PROFILE_D=$RPM_BUILD_ROOT%{_sysconfdir}/profile.d
+mkdir -p $PROFILE_D
+find $RPM_BUILD_ROOT%{_localstatedir}/lib/geogig -type f -name '*bat' -exec rm {} +
+echo  'export GEOGIG_HOME="/var/lib/geogig" && PATH="$PATH:$GEOGIG_HOME/bin"' > $PROFILE_D/geogig.sh
+
+# admin.json
+install -m 755 %{SOURCE11} $GEOSHAPE_CONF/
 
 %pre
 getent group %{name} >/dev/null || groupadd -r %{name}
-getent passwd %{name} >/dev/null || useradd -r -d %{_localstatedir}/lib/geonode/rogue_geonode -g %{name} -s /bin/bash -c "GeoShape Daemon User" %{name}
+getent passwd %{name} >/dev/null || useradd -r -d %{_localstatedir}/lib/geonode/rogue_geonode -g %{name} -s /bin/bash -c "GeoSHAPE Daemon User" %{name}
 
 %post
 if [ $1 -eq 1 ] ; then
-  /sbin/chkconfig --add %{name}
-  ln -s %{_localstatedir}/lib/geonode/rogue_geonode/%{name}/local_settings.py %{_sysconfdir}/%{name}/local_settings.py
-  echo ""
-  echo " GeoShape Version - %{version}-%{release}"
-  echo ""
-  echo "     -------------------------------     "
-  echo "              Important!!!               "
-  echo "                                         "
-  echo "      Reference /etc/geoshape/README     "
-  echo "         for post configuration          "
-  echo "     -------------------------------     "
-  echo ""
-  echo ""
-fi
-
-%post geoserver
-if [ $1 -eq 1 ] ; then
-  # add Java specific options
-  echo '# Next line added for geoshape service' >> %{_sysconfdir}/tomcat/tomcat.conf
-  echo 'JAVA_OPTS="-Xmx1024m -XX:MaxPermSize=256m"' >> %{_sysconfdir}/tomcat/tomcat.conf
+  ln -s %{_sysconfdir}/%{name}/local_settings.py %{_localstatedir}/lib/geonode/rogue_geonode/%{name}/local_settings.py
+  source %{_sysconfdir}/profile.d/geogig.sh
 fi
 
 %preun
+find %{_localstatedir}/lib/geonode -type f -name '*pyc' -exec rm {} +
 if [ $1 -eq 0 ] ; then
+  /sbin/service tomcat stop > /dev/null 2>&1
   /sbin/service %{name} stop > /dev/null 2>&1
   /sbin/service httpd stop > /dev/null 2>&1
   /sbin/chkconfig --del %{name}
+  #remove soft link and virtual environment
   rm -fr %{_localstatedir}/lib/geonode
-  rm -fr %{_sysconfdir}/%{name}
-  rm -f %{_sysconfdir}/init.d/%{name}
-  rm -f %{_sysconfdir}/supervisord.conf
-  rm -f %{_sysconfdir}/httpd/conf.d/%{name}.conf
-  rm -f %{_sysconfdir}/httpd/conf.d/proxy.conf
-fi
-
-%preun geoserver
-if [ $1 -eq 0 ] ; then
-  /sbin/service tomcat stop > /dev/null 2>&1
-  rm -fr %{_localstatedir}/lib/tomcat/webapps/geoserver
-  rm -f %{_sysconfdir}/tomcat/Catalina/localhost/geoserver.xml
-  echo ""
-  echo ""
-  echo "  -------------------------------"
-  echo "           Important!!!          "
-  echo "                                 "
-  echo "     Uninstall does not delete   "
-  echo "      /var/lib/geoserver/data    "
-  echo "  -------------------------------"
-  echo ""
-  echo ""
 fi
 
 %postun
 
-%postun geoserver
-if [ $1 -eq 1 ] ; then
-  /sbin/service tomcat condrestart >/dev/null 2>&1
-fi
-
-%clean 
+%clean
 [ ${RPM_BUILD_ROOT} != "/" ] && rm -rf ${RPM_BUILD_ROOT}
-[ -d $RPM_SOURCE_DIR/geoserver ] && rm -rf $RPM_SOURCE_DIR/geoserver
-[ -d $RPM_SOURCE_DIR/data ] && rm -rf $RPM_SOURCE_DIR/data
+
 %files
-%defattr(755,%{name},%{name},-)
-%{_localstatedir}/lib/geonode/
-%config(noreplace) %{_localstatedir}/lib/geonode/rogue_geonode/%{name}/local_settings.py
-%defattr(744,%{name},%{name},-)
-%{_localstatedir}/log/%{name}/
-%defattr(644,%{name},%{name},-)
+%defattr(755,%{name},%{name},755)
+%{_localstatedir}/lib/geogig
+%{_sysconfdir}/profile.d/geogig.sh
+%{_localstatedir}/lib/geonode
+%config(noreplace) %{_sysconfdir}/%{name}/local_settings.py
+%{_sysconfdir}/%{name}/admin.json
+%defattr(775,%{name},%{name},775)
+%dir %{_localstatedir}/lib/geonode/uwsgi/static
+%dir %{_localstatedir}/lib/geonode/uwsgi/uploaded
+%defattr(744,%{name},%{name},744)
+%dir %{_localstatedir}/log/celery
+%dir %{_localstatedir}/log/%{name}
+%defattr(644,%{name},%{name},644)
 %dir %{_sysconfdir}/%{name}/
-%{_sysconfdir}/%{name}/README
-%defattr(644,apache,apache,-)
+%defattr(644,apache,apache,644)
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/%{name}.conf
 %config(noreplace) %{_sysconfdir}/httpd/conf.d/proxy.conf
 %defattr(-,root,root,-)
 %config(noreplace) %{_sysconfdir}/supervisord.conf
 %defattr(-,root,root,-)
 %config %{_sysconfdir}/init.d/%{name}
-%doc ../SOURCES/license/GNU
-
-%files geoserver
-%defattr(-,root,root,-)
-%attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/geoserver
-%attr(-,tomcat,tomcat) %{_localstatedir}/lib/geoserver
-%dir %{_sysconfdir}/tomcat/Catalina/localhost
-%attr(-,tomcat,tomcat) %{_sysconfdir}/tomcat/Catalina/localhost/geoserver.xml
-%doc ../SOURCES/license/geoserver/GPL
+%{_prefix}/bin/%{name}-config
+%attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/file-service.war
 %doc ../SOURCES/license/GNU
 
 %changelog
-* Sun Nov 8 2015 Daniel Berry <dberry@boundlessgeo.com> 1.5-0.1.beta
-- add comments
+* Tue Dec 15 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5.1-1]
+- Updated geoshape.init to run all apps in supervisor.conf under the geoshape group
+- Added five celery workers to supervisor.conf
+- Added geogig-cli
+- Added rabbitmq-server >= 3.5.6 and erlang >= 18.1 as dependencies
+
+* Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5-1]
+- Updated geoshape-geonode to GeoNode==2.4

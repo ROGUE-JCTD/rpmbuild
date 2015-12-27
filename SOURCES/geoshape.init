@@ -12,7 +12,7 @@
 set -a
 
 PREFIX=/var/lib/geonode
-APP=geoshape
+APP=geoshape:*
 SUPERVISORD=$PREFIX/bin/supervisord
 SUPERVISORCTL=$PREFIX/bin/supervisorctl
 
@@ -57,7 +57,7 @@ running()
 start() {
         echo "Starting supervisord: "
 
-        if [ -e $PIDFILE ]; then 
+        if [ -e $PIDFILE ]; then
 		echo "ALREADY STARTED"
 		return 1
 	fi
@@ -75,15 +75,17 @@ start() {
 stop() {
         echo -n "Stopping supervisord: "
         $SUPERVISORCTL shutdown $APP
-	if [ -n "$WAIT_FOR_SUBPROCESSES" ]; then 
-            echo "Waiting roughly 60 seconds for $PIDFILE to be removed after child processes exit"
+        if [ -n "$WAIT_FOR_SUBPROCESSES" ]; then
+            echo "Waiting for $PIDFILE to be removed after child processes exit"
+            total_sleep=1
+            sleep $total_sleep
             for sleep in  2 2 2 2 4 4 4 4 8 8 8 8 last; do
                 if [ ! -e $PIDFILE ] ; then
-                    echo "Supervisord exited as expected in under $total_sleep seconds"
+                    echo "Supervisord exited as expected in $total_sleep seconds"
                     break
                 else
                     if [[ $sleep -eq "last" ]] ; then
-                        echo "Supervisord still working on shutting down. We've waited roughly 60 seconds, we'll let it do its thing from here"
+                        echo "Supervisord still working on shutting down."
                         return 1
                     else
                         sleep $sleep
@@ -97,6 +99,7 @@ stop() {
         # always remove the subsys. We might have waited a while, but just remove it at this point.
         rm -f $LOCKFILE
 }
+
 
 restart() {
         stop
