@@ -85,7 +85,7 @@ fi
 %defattr(-,root,root,-)
 %attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/geoserver
 %attr(775,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data
-%attr(755,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data/file-service-store
+%attr(755,geoshape,tomcat) %{_localstatedir}/lib/geoserver_data/file-service-store
 
 %changelog
 * Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [2.6-1]
