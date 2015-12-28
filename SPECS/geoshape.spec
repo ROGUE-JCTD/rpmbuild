@@ -20,7 +20,6 @@ Source5:          proxy.conf
 Source6:          local_settings.py
 Source7:          robots.txt
 Source8:          %{name}-config
-Source9:          file-service.war
 Source10:         geogig-cli-app-1.0.zip
 Source11:         admin.json
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
@@ -155,11 +154,6 @@ USER_BIN=$RPM_BUILD_ROOT%{_prefix}/bin
 mkdir -p $USER_BIN
 install -m 755 %{SOURCE8} $USER_BIN/
 
-# file-service.war
-WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
-mkdir -p $WEBAPPS
-install -m 755 %{SOURCE9} $WEBAPPS/
-
 # geogig-cli
 unzip -d $RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE10}
 PROFILE_D=$RPM_BUILD_ROOT%{_sysconfdir}/profile.d
@@ -219,7 +213,6 @@ fi
 %defattr(-,root,root,-)
 %config %{_sysconfdir}/init.d/%{name}
 %{_prefix}/bin/%{name}-config
-%attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/file-service.war
 %doc ../SOURCES/license/GNU
 
 %changelog

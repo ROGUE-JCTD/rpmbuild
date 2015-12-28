@@ -3,8 +3,6 @@ echo 'downloading sources'
 wget http://yum.geoshape.org/src/GeoNode-2.4.tar.gz
 [ -f Python-2.7.10.tgz ] && rm -f Python-2.7.10.tgz
 wget http://yum.geoshape.org/src/Python-2.7.10.tgz
-[ -f file-service.war ] && rm -f file-service.war
-wget http://yum.geoshape.org/src/file-service.war
 [ -f geogig-cli-app-1.0.zip ] && rm -f geogig-cli-app-1.0.zip
 wget http://yum.geoshape.org/src/geogig-cli-app-1.0.zip
 [ -f geoserver.war ] && rm -f geoserver.war
