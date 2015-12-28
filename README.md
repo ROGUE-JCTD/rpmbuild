@@ -19,9 +19,10 @@ If using this on a disconnected environment the following links include non "BAS
 
 __Note:__ devel rpms are needed only from buildign the GeoSHAPE rpms.
 
-[external.zip - 47.3MB](http://yum.geoshape.org/zip/external.zip)
+[external.zip - 49.6MB](http://yum.geoshape.org/zip/external.zip)
 - elasticsearch-1.6.0.noarch.rpm
 - erlang-18.1-1.el6.x86_64.rpm
+- mod_xsendfile-0.12-3.el6.x86_64.rpm
 - rabbitmq-server-3.5.6-1.noarch.rpm
 
 [opengeo.zip - 51.2 MB](http://yum.geoshape.org/zip/opengeo.zip)
