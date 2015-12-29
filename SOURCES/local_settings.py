@@ -25,9 +25,6 @@ SERVER_EMAIL = 'GeoSHAPE@localhost'
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
 REGISTRATION_OPEN = False
 
-#AUTH_EXEMPT_URLS = ('/i18n/setlang/', '/account/signup')
-
-
 DATABASE_ENGINE = 'postgresql_psycopg2'
 DATABASE_NAME = 'geoshape'
 DATABASE_USER = 'geoshape'
