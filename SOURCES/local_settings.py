@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from geoshape.settings import INSTALLED_APPS
+
 SITENAME = 'GeoSHAPE'
-SITEURL = 'http://localhost/'
+SITEURL = 'https://localhost/'
 DEBUG = True
+
+ALLOWED_HOSTS = ['localhost']
 
 PROXY_ALLOWED_HOSTS = (
 '*',
@@ -20,8 +24,6 @@ CLASSIFICATION_LINK = ''
 SERVER_EMAIL = 'GeoSHAPE@localhost'
 DEFAULT_FROM_EMAIL = 'webmaster@localhost'
 REGISTRATION_OPEN = False
-
-#AUTH_EXEMPT_URLS = ('/file-service/*', '/i18n/setlang/', '/account/signup')
 
 
 DATABASE_ENGINE = 'postgresql_psycopg2'
@@ -103,8 +105,6 @@ HAYSTACK_CONNECTIONS = {
         'INDEX_NAME': 'geonode',
         },
 }
-
-from geoshape.settings import INSTALLED_APPS
 
 INSTALLED_APPS += (
     'haystack',

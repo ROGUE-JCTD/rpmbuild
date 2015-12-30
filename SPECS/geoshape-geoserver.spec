@@ -1,9 +1,9 @@
 # Define Constants
 %define name geoshape-geoserver
 %define realname geoserver
-%define geoshape_ver 1.5.1
+%define geoshape_ver 1.7.9
 %define version 2.6
-%define release 1%{?dist}
+%define release 2%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
@@ -54,6 +54,7 @@ if [ ! -d $DATA ]; then
   mkdir -p $DATA
   cp -R $GEOSHAPE_DATA/* $DATA
 fi
+sed -i.bak "s|http://localhost|https://localhost|g" $GEOSHAPE_DATA/security/auth/geonodeAuthProvider/config.xml
 install -m 644 %{SOURCE2} $DATA/geogig/.geogigconfig
 
 %pre
@@ -88,5 +89,8 @@ fi
 %attr(755,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data/file-service-store
 
 %changelog
+* Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [2.6-2]
+- Add https to config.xml for geonode
+
 * Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [2.6-1]
 - Updated to 2.6
