@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
-%define version 1.7.9
-%define release 1%{?dist}
+%define version 1.7.11
+%define release 2%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -14,18 +14,20 @@ Summary:          Geospatial capabilities for Security, Humanitarian Assistance,
 Group:            Applications/Engineering
 License:          GPLv2
 Source0:          %{name}-%{version}.tar.gz
-Source1:          %{name}-geonode-%{geonode_clone_version}.tar.gz
-Source2:          supervisord.conf
-Source3:          %{name}.init
-Source4:          %{name}.conf
-Source5:          proxy.conf
-Source6:          local_settings.py
-Source7:          robots.txt
-Source8:          %{name}-config
-Source9:          geogig-cli-app-1.0.zip
-Source10:         admin.json
-Source11:         manage.py
-Source12:         %{name}-config.conf
+Source1:          pkgs.zip
+Source2:          requirements.txt
+Source3:          %{name}-geonode-%{geonode_clone_version}.tar.gz
+Source4:          supervisord.conf
+Source5:          %{name}.init
+Source6:          %{name}.conf
+Source7:          proxy.conf
+Source8:          local_settings.py
+Source9:          robots.txt
+Source10:         %{name}-config
+Source11:         geogig-cli-app-1.0.zip
+Source12:         admin.json
+Source13:         manage.py
+Source14:         %{name}-config.conf
 Packager:         Daniel Berry <dberry@boundlessgeo.com>
 Requires(pre):    /usr/sbin/useradd
 Requires(pre):    /usr/bin/getent
@@ -103,24 +105,25 @@ virtualenv .
 export PATH=/usr/pgsql-9.3/bin:$PATH
 source bin/activate
 
+# install pip dependencies
+unzip %{SOURCE1} -d $GEONODE_LIB
+install -m 755 %{SOURCE2} $GEONODE_LIB
+pip install -r requirements.txt --no-index --find-links $GEONODE_LIB/pkgs
+rm -fr $GEONODE_LIB/pkgs $GEONODE_LIB/requirements.txt
+
 # install rogue_geonode
 pushd rogue_geonode
 pip install .
 popd && popd
 
-tar -xf %{SOURCE1} -C .
+tar -xf %{SOURCE3} -C .
 python %{name}-geonode-%{geonode_clone_version}/setup.py install
 rm -fr %{name}-geonode-%{geonode_clone_version}
-
-# install Python GDAL, uWSGI, Supervisor
-pip install GDAL==1.11.2
-pip install uwsgi==1.9.17.1
-pip install supervisor==3.1.3
 
 # setup supervisord configuration
 SUPV_ETC=$RPM_BUILD_ROOT%{_sysconfdir}
 mkdir -p $SUPV_ETC
-install -m 644 %{SOURCE2} $SUPV_ETC/supervisord.conf
+install -m 644 %{SOURCE4} $SUPV_ETC/supervisord.conf
 GEOSHAPE_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/%{name}
 mkdir -p $GEOSHAPE_LOG
 CELERY_LOG=$RPM_BUILD_ROOT%{_localstatedir}/log/celery
@@ -128,13 +131,13 @@ mkdir -p $CELERY_LOG
 # setup init script
 INITD=$RPM_BUILD_ROOT%{_sysconfdir}/init.d
 mkdir -p $INITD
-install -m 751 %{SOURCE3} $INITD/%{name}
+install -m 751 %{SOURCE5} $INITD/%{name}
 
 # setup httpd configuration
 HTTPD_CONFD=$RPM_BUILD_ROOT%{_sysconfdir}/httpd/conf.d
 mkdir -p $HTTPD_CONFD
-install -m 644 %{SOURCE4} $HTTPD_CONFD/%{name}.conf
-install -m 644 %{SOURCE5} $HTTPD_CONFD/proxy.conf
+install -m 644 %{SOURCE6} $HTTPD_CONFD/%{name}.conf
+install -m 644 %{SOURCE7} $HTTPD_CONFD/proxy.conf
 
 # adjust virtualenv to /var/lib/geonode path
 VAR0=$RPM_BUILD_ROOT%{_localstatedir}/lib/geonode
@@ -146,10 +149,10 @@ grep -rl $VAR0 $VAR0 | xargs sed -i 's|'$VAR0'|'$VAR1'|g'
 GEOSHAPE_CONF=$RPM_BUILD_ROOT%{_sysconfdir}/%{name}
 mkdir -p $GEOSHAPE_CONF
 # local_settings.py
-install -m 775 %{SOURCE6} $GEOSHAPE_CONF/local_settings.py
+install -m 775 %{SOURCE8} $GEOSHAPE_CONF/local_settings.py
 
 # robots.txt
-install -m 755 %{SOURCE7} $GEONODE_LIB/rogue_geonode/%{name}/templates/robots.txt
+install -m 755 %{SOURCE9} $GEONODE_LIB/rogue_geonode/%{name}/templates/robots.txt
 # add robots.txt as a TemplateView in django original file is urls.py.bak
 sed -i.bak "s|urlpatterns = patterns('',|urlpatterns = patterns('',\\n\
 url(r'^/robots\\\.txt$', TemplateView.as_view(template_name='robots.txt', content_type='text/plain')),|" $RPM_BUILD_ROOT%{_localstatedir}/lib/geonode/rogue_geonode/%{name}/urls.py
@@ -157,23 +160,23 @@ url(r'^/robots\\\.txt$', TemplateView.as_view(template_name='robots.txt', conten
 # geoshape-config command
 USER_BIN=$RPM_BUILD_ROOT%{_prefix}/bin
 mkdir -p $USER_BIN
-install -m 755 %{SOURCE8} $USER_BIN/
+install -m 755 %{SOURCE10} $USER_BIN/
 
 # geogig-cli
-unzip -d $RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE9}
+unzip -d $RPM_BUILD_ROOT%{_localstatedir}/lib %{SOURCE11}
 PROFILE_D=$RPM_BUILD_ROOT%{_sysconfdir}/profile.d
 mkdir -p $PROFILE_D
 find $RPM_BUILD_ROOT%{_localstatedir}/lib/geogig -type f -name '*bat' -exec rm {} +
 echo  'export GEOGIG_HOME="/var/lib/geogig" && PATH="$PATH:$GEOGIG_HOME/bin"' > $PROFILE_D/geogig.sh
 
 # admin.json
-install -m 755 %{SOURCE10} $GEOSHAPE_CONF/
+install -m 755 %{SOURCE12} $GEOSHAPE_CONF/
 
 # manage.py
-install -m 755 %{SOURCE11} $GEONODE_LIB/rogue_geonode/
+install -m 755 %{SOURCE13} $GEONODE_LIB/rogue_geonode/
 
 # geoshape-config.conf
-install -m 755 %{SOURCE12} $GEOSHAPE_CONF/
+install -m 755 %{SOURCE14} $GEOSHAPE_CONF/
 
 %pre
 getent group geoservice >/dev/null || groupadd -r geoservice
@@ -232,6 +235,14 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Tue Jan 05 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-2]
+- Added requirements.txt
+- Change to install from local source using pip
+- Added Access-Control Headers for Apache
+
+* Mon Jan 04 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-1]
+- Upgraded to GeoSHAPE 1.7.11
+
 * Wed Dec 30 2015 BerryDaniel <dberry@boundlessgeo.com> [1.7.9-1]
 - Upgraded to GeoSHAPE 1.7.9
 

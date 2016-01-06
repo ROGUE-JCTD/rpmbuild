@@ -23,9 +23,9 @@ usage ()
   echo '        geoshape-config stop_all'
   echo '            stops all GeoSHAPE services'
   echo '        geoshape-config init <ip or domain>'
-  echo '            chains together database, django, updateip,'
+  echo '            chains together ssl, database, django, updateip,'
   echo '            collectstatic, syncdb, selinux, start_all,'
-  echo '            updatelayers, rebuildindex and createsuperus'
+  echo '            updatelayers, rebuildindex and createsuperuser'
   echo '        geoshape-config maploom_dev'
   echo '            modify geonode to point to the a build of maploom'
   echo '            on the host machine to speedup the edit-build-test'
@@ -237,7 +237,7 @@ ssl(){
 
   # country
   country=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^country/{print $3;exit}' "${CONFIG}")
-  [ -z "$country" ] || [ ${#country} -ge 3 ] && country="."
+  [ -z "$country" ] || [ ${#country} -ge 3 ] && country="US"
 
   # state
   state=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^state/{print $3;exit}' "${CONFIG}")
@@ -257,7 +257,8 @@ ssl(){
 
   # email
   email=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^email/{print $3;exit}' "${CONFIG}")
-  [[ "$email" != ?*@?*.?* ]] && email="."
+  [[ "$email" != ?*@?*.?* ]] && email="admin@geoshape.org"
+
   [ ! -d /etc/httpd/ssl ] && mkdir -p /etc/httpd/ssl
   [ -f /etc/httpd/ssl/geoshape.key ] && rm -f /etc/httpd/ssl/geoshape.key
   [ -f /etc/httpd/ssl/geoshape.crt ] && rm -f /etc/httpd/ssl/geoshape.crt
@@ -274,7 +275,7 @@ ssl(){
   cat /etc/httpd/ssl/geoshape.crt >> /etc/pki/tls/certs/ca-bundle.crt
 
   echo "Attempting to remove previous keystore entry"
-  keytool -delete -alias geoshape -keystore $KEYSTORE -storepass changeit
+  keytool -delete -alias geoshape -keystore $KEYSTORE -storepass changeit > /dev/null 2>&1
 
   echo "Importing CRT file into Java Keystore"
   # Importing DER file in keystore
