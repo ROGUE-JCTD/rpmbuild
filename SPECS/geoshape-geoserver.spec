@@ -2,8 +2,8 @@
 %define name geoshape-geoserver
 %define realname geoserver
 %define geoshape_ver 1.7.11
-%define version 2.6
-%define release 3%{?dist}
+%define version 2.8
+%define release 1%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
@@ -63,7 +63,7 @@ install -m 644 %{SOURCE2} $DATA/geogig/.geogigconfig
 if [ $1 -eq 1 ] ; then
   # add Java specific options
   echo '# Next line added for geonode service' >> %{_sysconfdir}/tomcat/tomcat.conf
-  echo 'JAVA_OPTS="-Xmx1024m -XX:MaxPermSize=256m -Duser.home=/var/lib/geoserver_data/geogig"' >> %{_sysconfdir}/tomcat/tomcat.conf
+  echo 'JAVA_OPTS="-Xmx1024m -XX:+UseParallelOldGC -XX:+UseParallelGC -XX:SoftRefLRUPolicyMSPerMB=36000 -Duser.home=/var/lib/geoserver_data/geogig"' >> %{_sysconfdir}/tomcat/tomcat.conf
 fi
 
 %preun
@@ -89,6 +89,10 @@ fi
 %attr(755,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data/file-service-store
 
 %changelog
+* Mon Jan 04 2016 BerryDaniel <arahav@boundlessgeo.com> [2.8-1]
+- Updated to 2.8
+- Changed JAVA_OPTS
+
 * Mon Jan 04 2016 BerryDaniel <dberry@boundlessgeo.com> [2.6-3]
 - fixed typo in replacing http with https
 
