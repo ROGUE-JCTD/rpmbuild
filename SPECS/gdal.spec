@@ -21,7 +21,7 @@ BuildRequires: openjpeg2-devel
 BuildRequires: postgresql93-devel
 BuildRequires: poppler-devel
 BuildRequires: xerces-c-devel
-BuildRequires: java-1.6.0-openjdk-devel
+BuildRequires: java-1.8.0-openjdk-devel
 BuildRequires: ant
 BuildRequires: chrpath
 BuildRequires: libtool
@@ -119,3 +119,4 @@ rm -rf %{buildroot}
 %changelog
 * Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [2.0.1-1]
 - Upgraded GDAL to 2.0.1
+- Upgraded java to 1.8
