@@ -4,9 +4,9 @@ echo 'downloading sources'
 echo '-------------------'
 srcs=()
 srcs+=("http://yum.geoshape.org/src/Python-2.7.10.tgz")
-srcs+=("http://yum.geoshape.org/src/geoserver.war")
-srcs+=("http://yum.geoshape.org/src/geoserver_data-geogig_od3.zip")
-srcs+=("http://yum.geoshape.org/src/geogig-cli-app-1.0.zip")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geoserver/2.8/geoserver.war")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geoserver_data-geogig_od3.zip")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geogig-cli-app-1.0.zip")
 srcs+=("http://yum.geoshape.org/src/setuptools-18.7.1.tar.gz")
 srcs+=("http://yum.geoshape.org/src/virtualenv-13.1.0.tar.gz")
 for src in "${srcs[@]}"
