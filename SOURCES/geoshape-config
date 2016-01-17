@@ -45,16 +45,16 @@ GEOSERVER_DATA_DIR=/var/lib/geoserver_data
 CATALINA_ETC=/etc/tomcat/Catalina
 PYTHON27=/var/lib/geonode/bin/python2.7
 MANAGE=/var/lib/geonode/rogue_geonode/manage.py
-KEYSTORE=/usr/lib/jvm/jre-1.8.0-openjdk.x86_64/lib/security/cacerts
+KEYSTORE=/usr/lib/jvm/java/jre/lib/security/cacerts
 
 database()
 {
-  if [ ! -d /var/lib/pgsql/9.3/data/base ]; then
-    service postgresql-9.3 initdb
-    chkconfig postgresql-9.3 on
-    sed -i.geoshape "s/  peer/  trust/g" /var/lib/pgsql/9.3/data/pg_hba.conf
-    sed -i.geoshape "s/  ident/  md5/g" /var/lib/pgsql/9.3/data/pg_hba.conf
-    service postgresql-9.3 restart > /dev/null 2>&1
+  if [ ! -d /var/lib/pgsql/9.5/data/base ]; then
+    service postgresql-9.5 initdb
+    chkconfig postgresql-9.5 on
+    sed -i.geoshape "s/  peer/  trust/g" /var/lib/pgsql/9.5/data/pg_hba.conf
+    sed -i.geoshape "s/  ident/  md5/g" /var/lib/pgsql/9.5/data/pg_hba.conf
+    service postgresql-9.5 restart > /dev/null 2>&1
   fi
   PGUSER=$(psql -U postgres -c '\du' | cut -d \| -f 1 | grep -w geoshape | wc -l)
   if [ $PGUSER == 0 ]
