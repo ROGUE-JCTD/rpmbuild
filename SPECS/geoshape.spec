@@ -65,9 +65,8 @@ Requires:         python27
 Requires:         python27-virtualenv
 Requires:         gdal = 2.0.1
 Requires:         postgresql95
-Requires:         postgis >= 2.2
-Requires:         postgis-postgresql95 >= 2.2
 Requires:         postgresql95-server
+Requires:         postgis-postgresql95 >= 2.2
 Requires:         httpd
 Requires:         mod_ssl
 Requires:         mod_xsendfile
