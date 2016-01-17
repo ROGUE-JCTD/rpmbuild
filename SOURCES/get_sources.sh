@@ -3,12 +3,16 @@
 echo 'downloading sources'
 echo '-------------------'
 srcs=()
-srcs+=("http://yum.geoshape.org/src/Python-2.7.10.tgz")
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geoserver/2.8/geoserver.war")
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geoserver_data-geogig_od3.zip")
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/geogig-cli-app-1.0.zip")
-srcs+=("http://yum.geoshape.org/src/setuptools-18.7.1.tar.gz")
-srcs+=("http://yum.geoshape.org/src/virtualenv-13.1.0.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/Python-2.7.10.tgz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/setuptools-18.7.1.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/virtualenv-13.1.0.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/libkml-1.2.0-svn-28-aug-2015.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/lcms2-2.7.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/openjpeg-2.1.0.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/gdal-2.0.1.tar.gz")
 for src in "${srcs[@]}"
 do
   filename=`echo $src | sed 's/.*\///'`

@@ -8,6 +8,13 @@ git clone -b geoint git@github.com:ROGUE-JCTD/rpmbuild.git
 cd rpmbuild
 vagrant up
 vagrant ssh
+QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/lcms2.spec
+yum -y install /vagrant/RPMS/*.rpm
+QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/openjpeg2.spec
+QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/libkml.spec
+yum -y install /vagrant/RPMS/*.rpm
+QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/gdal.spec
+yum -y install /vagrant/RPMS/*.rpm
 QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/geoshape.spec
 QA_RPATHS=$[ 0x0001|0x0010 ] rpmbuild --define '_topdir /vagrant' -bb /vagrant/SPECS/geoshape-geoserver.spec
 vagrant destroy

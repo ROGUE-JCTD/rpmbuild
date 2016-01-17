@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 2%{?dist}
+%define release 3%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -48,14 +48,14 @@ BuildRequires:    zlib-devel
 BuildRequires:    bzip2-devel
 BuildRequires:    openssl-devel
 BuildRequires:    tk-devel
-BuildRequires:    gdal-devel = 1.11.2
+BuildRequires:    gdal-devel = 2.0.1
 BuildRequires:    libxslt-devel
 BuildRequires:    libxml2-devel
 BuildRequires:    libjpeg-turbo-devel
 BuildRequires:    zlib-devel
 BuildRequires:    libtiff-devel
 BuildRequires:    freetype-devel
-BuildRequires:    littlecms-devel
+BuildRequires:    lcms2-devel
 BuildRequires:    proj-devel
 BuildRequires:    geos-devel
 BuildRequires:    postgresql93-devel
@@ -63,7 +63,7 @@ BuildRequires:    unzip
 BuildRequires:    git
 Requires:         python27
 Requires:         python27-virtualenv
-Requires:         gdal = 1.11.2
+Requires:         gdal = 2.0.1
 Requires:         postgresql93
 Requires:         postgresql93-server
 Requires:         postgis21-postgresql93
@@ -76,7 +76,7 @@ Requires:         libjpeg-turbo
 Requires:         zlib
 Requires:         libtiff
 Requires:         freetype
-Requires:         littlecms
+Requires:         lcms2
 Requires:         proj
 Requires:         geos
 Requires:         %{name}-geoserver >= 2.6
@@ -235,6 +235,11 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-3]
+- Fixed lcms2 rhel issue
+- Upgraded to GDAL 2.0.1 with openjpeg2 and libkml support
+- moved sources to boundless public s3 bucket
+
 * Tue Jan 05 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-2]
 - Added requirements.txt
 - Change to install from local source using pip
