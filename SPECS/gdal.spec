@@ -1,7 +1,7 @@
 Summary: Geospatial Data Abstraction Library
 Name: gdal
 Version: 2.0.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: MIT/X
 Group: Applications/Engineering
 URL: http://www.gdal.org/
@@ -18,7 +18,7 @@ BuildRequires: expat-devel
 BuildRequires: sqlite-devel
 BuildRequires: libkml-devel
 BuildRequires: openjpeg2-devel
-BuildRequires: postgresql93-devel
+BuildRequires: postgresql95-devel
 BuildRequires: poppler-devel
 BuildRequires: xerces-c-devel
 BuildRequires: java-1.8.0-openjdk-devel
@@ -31,7 +31,7 @@ Requires: geos >= 3.3.3
 Requires: swig
 Requires: proj
 Requires: poppler
-Requires: postgresql93-libs >= 9.3.2
+Requires: postgresql95-libs
 Requires: expat
 Requires: curl
 Requires: sqlite
@@ -78,7 +78,7 @@ you will need to install %{name}-devel.
 
 sed -i 's|@LIBTOOL@|%{_bindir}/libtool|g' GDALmake.opt.in
 
-%configure --datadir=/usr/share/gdal --disable-static --with-pg=/usr/pgsql-9.3/bin/pg_config  --disable-rpath
+%configure --datadir=/usr/share/gdal --disable-static --with-pg=/usr/pgsql-9.5/bin/pg_config  --disable-rpath
 
 make
 make %{?_smp_mflags}
@@ -117,6 +117,8 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/gdal.pc
 
 %changelog
+* Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [2.0.1-2]
+- Upgraded PostgreSQL to 9.5
 * Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [2.0.1-1]
 - Upgraded GDAL to 2.0.1
 - Upgraded java to 1.8
