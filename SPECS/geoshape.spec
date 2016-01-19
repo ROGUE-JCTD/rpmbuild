@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 3%{?dist}
+%define release 4%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -58,15 +58,15 @@ BuildRequires:    freetype-devel
 BuildRequires:    lcms2-devel
 BuildRequires:    proj-devel
 BuildRequires:    geos-devel
-BuildRequires:    postgresql93-devel
+BuildRequires:    postgresql95-devel
 BuildRequires:    unzip
 BuildRequires:    git
 Requires:         python27
 Requires:         python27-virtualenv
 Requires:         gdal = 2.0.1
-Requires:         postgresql93
-Requires:         postgresql93-server
-Requires:         postgis21-postgresql93
+Requires:         postgresql95
+Requires:         postgresql95-server
+Requires:         postgis-postgresql95 >= 2.2
 Requires:         httpd
 Requires:         mod_ssl
 Requires:         mod_xsendfile
@@ -102,7 +102,7 @@ mv %{name}-%{version} rogue_geonode
 
 # create virtualenv
 virtualenv .
-export PATH=/usr/pgsql-9.3/bin:$PATH
+export PATH=/usr/pgsql-9.5/bin:$PATH
 source bin/activate
 
 # install pip dependencies
@@ -235,6 +235,9 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-4]
+- Upgrade PostgreSQL to 9.5
+- Upgrade PostGIS to 2.2.1
 * Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-3]
 - Fixed lcms2 rhel issue
 - Upgraded to GDAL 2.0.1 with openjpeg2 and libkml support
