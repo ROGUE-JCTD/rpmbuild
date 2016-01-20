@@ -23,5 +23,4 @@ gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
 name=rabbitmq_rabbitmq-server
 baseurl=https://packagecloud.io/rabbitmq/rabbitmq-server/el/6/$basearch
 enabled=1
-gpgcheck=1
-gpgkey=https://packagecloud.io/gpg.key
+gpgcheck=0
