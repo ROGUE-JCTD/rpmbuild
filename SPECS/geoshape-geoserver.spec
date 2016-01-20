@@ -54,7 +54,7 @@ if [ ! -d $DATA ]; then
   mkdir -p $DATA
   cp -R $GEOSHAPE_DATA/* $DATA
 fi
-sed -i.bak "s|http://localhost|https://localhost|g" $DATA/security/auth/geonodeAuthProvider/config.xml
+#sed -i.bak "s|http://localhost|https://localhost|g" $DATA/security/auth/geonodeAuthProvider/config.xml
 install -m 644 %{SOURCE2} $DATA/geogig/.geogigconfig
 
 %pre
