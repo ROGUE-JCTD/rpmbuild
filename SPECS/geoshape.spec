@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 4%{?dist}
+%define release 5%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -195,7 +195,7 @@ fi
 %preun
 find %{_localstatedir}/lib/geonode -type f -name '*pyc' -exec rm {} +
 if [ $1 -eq 0 ] ; then
-  /sbin/service tomcat stop > /dev/null 2>&1
+  /sbin/service tomcat8 stop > /dev/null 2>&1
   /sbin/service %{name} stop > /dev/null 2>&1
   /sbin/service httpd stop > /dev/null 2>&1
   /sbin/chkconfig --del %{name}
@@ -235,6 +235,8 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Tue Jan 19 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-5]
+- Updated for tomcat8
 * Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-4]
 - Upgrade PostgreSQL to 9.5
 - Upgrade PostGIS to 2.2.1

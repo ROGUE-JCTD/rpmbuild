@@ -42,7 +42,7 @@ CHAR="[:alnum:]"
 IS_REPLACE=0
 GEOSHAPE_ETC=/etc/geoshape
 GEOSERVER_DATA_DIR=/var/lib/geoserver_data
-CATALINA_ETC=/etc/tomcat/Catalina
+CATALINA_ETC=/etc/tomcat8/Catalina
 PYTHON27=/var/lib/geonode/bin/python2.7
 MANAGE=/var/lib/geonode/rogue_geonode/manage.py
 KEYSTORE=/etc/pki/java/cacerts
@@ -93,8 +93,8 @@ django()
 
 selinux()
 {
-  iptables -A INPUT -p tcp -m tcp --dport 80 -j ACCEPT
-  iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
+  iptables -I INPUT -p tcp --dport 80 -j ACCEPT
+  iptables -I INPUT -p tcp --dport 443 -j ACCEPT
   service iptables save
   setsebool -P httpd_can_network_connect=1 httpd_can_network_connect_db=1
   service iptables restart > /dev/null 2>&1
@@ -162,11 +162,11 @@ dbshell()
 
 start_all()
 {
-  chkconfig tomcat on
+  chkconfig tomcat8 on
   echo "Starting tomcat service"
-  service tomcat stop > /dev/null 2>&1
+  service tomcat8 stop > /dev/null 2>&1
   sleep 2
-  service tomcat start
+  service tomcat8 start
   chkconfig rabbitmq-server on
   echo "Starting rabbitmq-server service"
   service rabbitmq-server stop > /dev/null 2>&1
@@ -192,7 +192,7 @@ start_all()
 stop_all()
 {
   echo "Stopping tomcat service"
-  service tomcat stop
+  service tomcat8 stop
   echo "Stopping rabbitmq-server service"
   service rabbitmq-server stop
   echo "Stopping elasticsearch service"
@@ -283,7 +283,7 @@ ssl(){
   keytool -import -alias geoshape -trustcacerts -noprompt -storepass changeit -keystore $KEYSTORE -file /etc/httpd/ssl/geoshape.crt
 
   echo "Restarting Tomcat"
-  service tomcat restart > /dev/null 2>&1
+  service tomcat8 restart > /dev/null 2>&1
   echo "Restarting uWSGI"
   service geoshape restart > /dev/null 2>&1
   echo "Restarting Apache httpd"

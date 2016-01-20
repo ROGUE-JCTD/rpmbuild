@@ -17,6 +17,7 @@ srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/lcms2-2.7.tar.g
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/openjpeg-2.1.0.tar.gz")
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/gdal-2.0.1.tar.gz")
 srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/postgis-2.2.1.tar.gz")
+srcs+=("https://s3.amazonaws.com/boundlessps-public/geoshape/src/apache-tomcat-8.0.30.tar.gz")
 for src in "${srcs[@]}"
 do
   filename=`echo $src | sed 's/.*\///'`

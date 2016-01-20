@@ -3,7 +3,7 @@
 %define realname geoserver
 %define geoshape_ver 1.7.11
 %define version 2.8
-%define release 1%{?dist}
+%define release 2%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
@@ -16,7 +16,7 @@ Group:         Development/Libraries
 License:       GPLv2
 BuildRequires: unzip
 Requires:      %{name} = %{version}-%{release}
-Requires:      tomcat
+Requires:      tomcat8
 Conflicts:     geoserver
 Source0:       geoserver.war
 Source1:       geoserver_data-geogig_od3.zip
@@ -44,7 +44,7 @@ popd
 %build
 
 %install
-WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat/webapps
+WEBAPPS=$RPM_BUILD_ROOT%{_localstatedir}/lib/tomcat8/webapps
 GS=$RPM_SOURCE_DIR/geoserver
 DATA=$RPM_BUILD_ROOT%{_localstatedir}/lib/geoserver_data
 GEOSHAPE_DATA=$RPM_SOURCE_DIR/data
@@ -62,19 +62,19 @@ install -m 644 %{SOURCE2} $DATA/geogig/.geogigconfig
 %post
 if [ $1 -eq 1 ] ; then
   # add Java specific options
-  echo '# Next line added for geonode service' >> %{_sysconfdir}/tomcat/tomcat.conf
-  echo 'JAVA_OPTS="-Xmx1024m -XX:+UseParallelOldGC -XX:+UseParallelGC -XX:SoftRefLRUPolicyMSPerMB=36000 -Duser.home=/var/lib/geoserver_data/geogig"' >> %{_sysconfdir}/tomcat/tomcat.conf
+  echo '# Next line added for geonode service' >> %{_sysconfdir}/sysconfig/tomcat8
+  echo 'JAVA_OPTS="-Djava.awt.headless=true -Xms256m -Xmx1024m -Xrs -XX:PerfDataSamplingInterval=500 -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:SoftRefLRUPolicyMSPerMB=36000 -Duser.home=/var/lib/geoserver_data/geogig"' >> %{_sysconfdir}/sysconfig/tomcat8
 fi
 
 %preun
 if [ $1 -eq 0 ] ; then
-  /sbin/service tomcat stop > /dev/null 2>&1
-  rm -fr %{_localstatedir}/lib/tomcat/webapps/geoserver
+  /sbin/service tomcat8 stop > /dev/null 2>&1
+  rm -fr %{_localstatedir}/lib/tomcat8/webapps/geoserver
 fi
 
 %postun
 if [ $1 -eq 1 ] ; then
-  /sbin/service tomcat condrestart >/dev/null 2>&1
+  /sbin/service tomcat8 condrestart >/dev/null 2>&1
 fi
 
 %clean
@@ -84,12 +84,14 @@ fi
 
 %files
 %defattr(-,root,root,-)
-%attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat/webapps/geoserver
+%attr(-,tomcat,tomcat) %{_localstatedir}/lib/tomcat8/webapps/geoserver
 %attr(775,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data
 %attr(755,tomcat,tomcat) %{_localstatedir}/lib/geoserver_data/file-service-store
 
 %changelog
-* Mon Jan 04 2016 BerryDaniel <arahav@boundlessgeo.com> [2.8-1]
+* Tue Jan 19 2016 amirahav <arahav@boundlessgeo.com> [2.8-2]
+- Updated for tomcat8
+* Mon Jan 04 2016 amirahav <arahav@boundlessgeo.com> [2.8-1]
 - Updated to 2.8
 - Changed JAVA_OPTS
 
