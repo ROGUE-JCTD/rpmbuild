@@ -67,7 +67,7 @@ done
 
 # Prepare nad
 cd nad
-tar -xf %{SOURCE} -C .
+tar -xf %{SOURCE1} -C .
 cd ..
 # fix shebag header of scripts
 for script in `find nad/ -type f -perm -a+x`; do
