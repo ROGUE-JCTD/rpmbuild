@@ -18,6 +18,7 @@ __pycache__/
 *.gz
 *.zip
 *.war
+*.bz2
 
 # RPM TEMP DIRS
 rpmbuild/SOURCES/geoserver
