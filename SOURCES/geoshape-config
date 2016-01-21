@@ -269,11 +269,13 @@ ssl(){
   # CRT and KEY files
   openssl req -x509 -newkey rsa:2048 -keyout /etc/httpd/ssl/geoshape.key -out /etc/httpd/ssl/geoshape.crt -days 365 -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email" -nodes
 
-  echo "Importing CRT file into httplib and httplib2 modules"
+  echo "Importing CRT file into httplib, httplib2 and certifi/requests modules"
   # Importing CRT into httplib2
   cat /etc/httpd/ssl/geoshape.crt >> /var/lib/geonode/lib/python2.7/site-packages/httplib2/cacerts.txt
   # Importing CRT into httplib2
   cat /etc/httpd/ssl/geoshape.crt >> /etc/pki/tls/certs/ca-bundle.crt
+  # Importing cert into certifi/requests
+  cat /etc/httpd/ssl/geoshape.crt >> /var/lib/geonode/lib/python2.7/site-packages/certifi/cacert.pem
 
   echo "Attempting to remove previous keystore entry"
   keytool -delete -alias geoshape -keystore $KEYSTORE -storepass changeit > /dev/null 2>&1

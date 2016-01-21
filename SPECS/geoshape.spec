@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 5%{?dist}
+%define release 6%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -235,11 +235,17 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Wed Jan 20 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-6]
+- added python module certifi
+- updated geoshape-config to add self signed cert to certifi ca bundle
+
 * Tue Jan 19 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-5]
 - Updated for tomcat8
+
 * Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-4]
 - Upgrade PostgreSQL to 9.5
 - Upgrade PostGIS to 2.2.1
+
 * Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-3]
 - Fixed lcms2 rhel issue
 - Upgraded to GDAL 2.0.1 with openjpeg2 and libkml support
