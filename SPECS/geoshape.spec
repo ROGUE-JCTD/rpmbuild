@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 6%{?dist}
+%define release 7%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -48,7 +48,7 @@ BuildRequires:    zlib-devel
 BuildRequires:    bzip2-devel
 BuildRequires:    openssl-devel
 BuildRequires:    tk-devel
-BuildRequires:    gdal-devel = 2.0.1
+BuildRequires:    gdal-devel >= 2.0.1
 BuildRequires:    libxslt-devel
 BuildRequires:    libxml2-devel
 BuildRequires:    libjpeg-turbo-devel
@@ -63,7 +63,7 @@ BuildRequires:    unzip
 BuildRequires:    git
 Requires:         python27
 Requires:         python27-virtualenv
-Requires:         gdal = 2.0.1
+Requires:         gdal >= 2.0.1
 Requires:         postgresql95
 Requires:         postgresql95-server
 Requires:         postgis-postgresql95 >= 2.2
@@ -235,6 +235,8 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Fri Feb 5 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-7]
+- Change GDAL dependency to match PostGIS
 * Wed Jan 20 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-6]
 - added python module certifi
 - updated geoshape-config to add self signed cert to certifi ca bundle
