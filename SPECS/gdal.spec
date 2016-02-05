@@ -1,7 +1,7 @@
 Summary: Geospatial Data Abstraction Library
 Name: gdal
-Version: 2.0.1
-Release: 2%{?dist}
+Version: 2.0.2
+Release: 1%{?dist}
 License: MIT/X
 Group: Applications/Engineering
 URL: http://www.gdal.org/
@@ -9,7 +9,9 @@ URL: http://www.gdal.org/
 %define _unpackaged_files_terminate_build 0
 %define debug_package %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define mrsid_name MrSID_DSDK-9.5.1.4427-linux.x86-64.gcc44
 Source0: http://download.osgeo.org/gdal/gdal-%{version}.tar.gz
+Source1: %{mrsid_name}.tar.gz
 BuildRequires: gcc
 BuildRequires: geos-devel >= 3.3.3
 BuildRequires: proj-devel
@@ -77,8 +79,14 @@ you will need to install %{name}-devel.
 %build
 
 sed -i 's|@LIBTOOL@|%{_bindir}/libtool|g' GDALmake.opt.in
+tar -xf %{SOURCE1} -C .
+# copying mrsid and mrsid_lidar lib and include to /usr/local because build fails if we point at location within the build directory
+/bin/cp -rf %{_builddir}/%{name}-%{version}/%{mrsid_name}/Lidar_DSDK/lib/* /usr/local/lib
+/bin/cp -rf %{_builddir}/%{name}-%{version}/%{mrsid_name}/Lidar_DSDK/include/* /usr/local/include
+/bin/cp -rf %{_builddir}/%{name}-%{version}/%{mrsid_name}/Raster_DSDK/lib/* /usr/local/lib
+/bin/cp -rf %{_builddir}/%{name}-%{version}/%{mrsid_name}/Raster_DSDK/include/* /usr/local/include
 
-%configure --datadir=/usr/share/gdal --disable-static --with-pg=/usr/pgsql-9.5/bin/pg_config  --disable-rpath
+%configure --datadir=/usr/share/gdal --disable-static --with-pg=/usr/pgsql-9.5/bin/pg_config --disable-rpath --with-mrsid=/usr/local  --with-mrsid_lidar=/usr/local 
 
 make
 make %{?_smp_mflags}
@@ -97,6 +105,10 @@ make install DESTDIR=%{buildroot}
 %else
 %define lib_dir /usr/lib
 %endif
+mkdir -p %{buildroot}/%{lib_dir}/gdalplugins
+cp %{mrsid_name}/Raster_DSDK/lib/libltidsdk.so* %{buildroot}/%{lib_dir}
+cp %{mrsid_name}/Lidar_DSDK/lib/liblti_lidar_dsdk.so* %{buildroot}/%{lib_dir}
+cp %{mrsid_name}/Lidar_DSDK/lib/liblaslib.so %{buildroot}/%{lib_dir}
 # Remove RPATHs
 chrpath -d swig/java/*.so
 cp swig/java/*.so %{buildroot}%{lib_dir}
@@ -117,6 +129,9 @@ rm -rf %{buildroot}
 %{_libdir}/pkgconfig/gdal.pc
 
 %changelog
+* Fri Feb 5 2016 amirahav <arahav@boundlessgeo.com> [2.0.2-1]
+- Upgraded to GDAL 2.0.2
+- Added MrSID/MrSID LiDAR
 * Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [2.0.1-2]
 - Upgraded PostgreSQL to 9.5
 * Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [2.0.1-1]
