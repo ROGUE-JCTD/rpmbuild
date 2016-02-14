@@ -3,10 +3,10 @@
 %define realname geoserver
 %define geoshape_ver 1.7.11
 %define version 2.8
-%define release 4%{?dist}
+%define release 4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
-%define _rpmfilename %%{NAME}-%%{VERSION}.%%{ARCH}.rpm
+%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
 
 Name:          %{name}
 Version:       %{version}
