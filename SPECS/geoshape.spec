@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 7%{?dist}
+%define release 8%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -231,6 +231,8 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Sat Feb 13 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-8]
+- Split GeoShape
 * Fri Feb 5 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-7]
 - Change GDAL dependency to match PostGIS
 * Wed Jan 20 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-6]

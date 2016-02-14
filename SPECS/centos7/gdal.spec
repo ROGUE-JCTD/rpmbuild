@@ -27,10 +27,10 @@ BuildRequires: java-1.8.0-openjdk-devel
 BuildRequires: ant
 BuildRequires: chrpath
 BuildRequires: libtool
-BuildRequires: swig
+BuildRequires: swig = 1.3.40
 
 Requires: geos >= 3.3.3
-Requires: swig
+Requires: swig = 1.3.40
 Requires: proj
 Requires: poppler
 Requires: postgresql95-libs
