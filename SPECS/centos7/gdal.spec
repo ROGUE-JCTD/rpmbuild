@@ -9,7 +9,7 @@ URL: http://www.gdal.org/
 %define _unpackaged_files_terminate_build 0
 %define debug_package %{nil}
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
-%define mrsid_name MrSID_DSDK-9.5.1.4427-linux.x86-64.gcc44
+%define mrsid_name MrSID_DSDK-9.5.1.4427-linux.x86-64.gcc48
 Source0: http://download.osgeo.org/gdal/gdal-%{version}.tar.gz
 Source1: %{mrsid_name}.tar.gz
 BuildRequires: gcc

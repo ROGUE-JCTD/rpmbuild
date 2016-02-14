@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 7%{?dist}
+%define release 1%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
@@ -19,8 +19,8 @@ Source2:          requirements.txt
 Source3:          %{name}-geonode-%{geonode_clone_version}.tar.gz
 Source4:          supervisord.conf
 Source5:          %{name}.init
-Source6:          %{name}.conf
-Source7:          proxy.conf
+Source6:          %{name}_centos7.conf
+Source7:          proxy_centos7.conf
 Source8:          local_settings.py
 Source9:          robots.txt
 Source10:         %{name}-config
@@ -34,8 +34,8 @@ Requires(pre):    /usr/bin/getent
 Requires(pre):    bash
 Requires(postun): /usr/sbin/userdel
 Requires(postun): bash
-BuildRequires:    python27-devel
-BuildRequires:    python27-virtualenv
+BuildRequires:    python-devel
+BuildRequires:    python-virtualenv
 BuildRequires:    gcc
 BuildRequires:    gcc-c++
 BuildRequires:    make
@@ -61,8 +61,8 @@ BuildRequires:    geos-devel
 BuildRequires:    postgresql95-devel
 BuildRequires:    unzip
 BuildRequires:    git
-Requires:         python27
-Requires:         python27-virtualenv
+Requires:         python
+Requires:         python-virtualenv
 Requires:         gdal >= 2.0.1
 Requires:         httpd
 Requires:         mod_ssl
@@ -231,48 +231,5 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
-* Fri Feb 5 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-7]
-- Change GDAL dependency to match PostGIS
-* Wed Jan 20 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-6]
-- added python module certifi
-- updated geoshape-config to add self signed cert to certifi ca bundle
-
-* Tue Jan 19 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-5]
-- Updated for tomcat8
-
-* Sat Jan 16 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-4]
-- Upgrade PostgreSQL to 9.5
-- Upgrade PostGIS to 2.2.1
-
-* Sat Jan 16 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-3]
-- Fixed lcms2 rhel issue
-- Upgraded to GDAL 2.0.1 with openjpeg2 and libkml support
-- moved sources to boundless public s3 bucket
-
-* Tue Jan 05 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-2]
-- Added requirements.txt
-- Change to install from local source using pip
-- Added Access-Control Headers for Apache
-
-* Mon Jan 04 2016 BerryDaniel <dberry@boundlessgeo.com> [1.7.11-1]
-- Upgraded to GeoSHAPE 1.7.11
-
-* Wed Dec 30 2015 BerryDaniel <dberry@boundlessgeo.com> [1.7.9-1]
-- Upgraded to GeoSHAPE 1.7.9
-
-* Tue Dec 29 2015 BerryDaniel <dberry@boundlessgeo.com> [1.7.6-0.2]
-- Upgraded to GeoSHAPE 1.7.6
-- removed file-service.war
-- adjustments to geoshape.conf and geoshape-config
-- added geoservice group
-- added ssl
-- added geoshape-config.conf
-
-* Tue Dec 15 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5.1-1]
-- Updated geoshape.init to run all apps in supervisor.conf under the geoshape group
-- Added five celery workers to supervisor.conf
-- Added geogig-cli
-- Added rabbitmq-server >= 3.5.6 and erlang >= 18.1 as dependencies
-
-* Tue Dec 08 2015 BerryDaniel <dberry@boundlessgeo.com> [1.5-1]
-- Updated geoshape-geonode to GeoNode==2.4
+* Sat Feb 13 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-1]
+- CentOS7 support

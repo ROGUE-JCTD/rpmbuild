@@ -6,7 +6,7 @@
 %define release 3%{?dist}
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
-%define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define _rpmfilename %%{NAME}-%%{VERSION}.%%{ARCH}.rpm
 
 Name:          %{name}
 Version:       %{version}
@@ -15,7 +15,6 @@ Summary:       A version of GeoServer that is enhanced and designed for use with
 Group:         Development/Libraries
 License:       GPLv2
 BuildRequires: unzip
-Requires:      %{name} = %{version}-%{release}
 Requires:      tomcat8
 Conflicts:     geoserver
 Source0:       geoserver.war

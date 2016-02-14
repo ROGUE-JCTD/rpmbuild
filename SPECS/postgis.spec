@@ -17,6 +17,7 @@ URL:            http://postgis.org/
 
 
 %define _rpmfilename %%{NAME}-%%{VERSION}-%%{RELEASE}.%%{ARCH}.rpm
+%define _unpackaged_files_terminate_build 0
 
 BuildRequires:  geos-devel >= 3.5.0
 BuildRequires:  gdal-devel >= 2.0.1
@@ -170,7 +171,7 @@ rm -rf %{buildroot}
 - update to postgis 2.1.8
 * Wed Nov 19 2014 Michael Weisman 2.1.4
 - update to postgis 2.1.4
-* Wed Jun 13 2014 Michael Weisman 2.1.3
+* Fri Jun 13 2014 Michael Weisman 2.1.3
 - update to postgis 2.1.3
 * Tue May 13 2014 Michael Weisman 2.1.1
 - update to postgis 2.1.2
@@ -179,46 +180,5 @@ rm -rf %{buildroot}
 * Mon Sep 23 2013 Justin Deoliveira 2.1.0
 - update to postgis 2.1.0
 - separating files into client and server packages
-* Fri Mar 19 2010 Otto Dassau 1.5.1
-- update to current version
-* Fri Feb 19 2010 Otto Dassau 1.5.0
-- update to current version
-- remove fixwarnings.diff patch
-- added doc/postgis_comment.sql
-* Thu Dec 31 2009 Otto Dassau 1.4.1
-- update to current version
-* Thu Sep 04 2009 Otto Dassau 1.4.0
-- update to current version
-- sqldir is now /usr/share/postgresql/contrib
-* Wed Jan 28 2009 Otto Dassau 1.3.5
-- update to current version
-* Tue Nov 25 2008 Otto Dassau 1.3.4
-- update to current version
-* Mon Jul 14 2008 Otto Dassau 1.3.3
-- added rpmlintrc file
-* Wed Jul 09 2007 Dirk Stöcker <opensuse@dstoecker.de> 1.3.1
-- adapted to openSUSE build service
-* Tue Dec 22 2005 Devrim GUNDUZ 1.1.0
-- Final fixes for 1.1.0
-* Tue Dec 06 2005 Devrim GUNDUZ 1.10
-- Update to 1.1.0
-* Mon Oct 03 2005 Devrim GUNDUZ
-- Make PostGIS build against pgxs so that we don't need PostgreSQL sources.
-- Fixed all build errors except jdbc (so, defaulted to 0)
-- Added new files under utils
-- Removed postgis-jdbc2-makefile.patch (applied to -head)
-* Tue Sep 27 2005 Devrim GUNDUZ 1.0.4
-- Update to 1.0.4
-* Sun Apr 20 2005 Devrim GUNDUZ 1.0.0
-- 1.0.0 Gold
-* Sun Apr 17 2005 Devrim GUNDUZ
-- Modified the spec file so that we can build JDBC2 RPMs...
-- Added -utils RPM to package list.
-* Fri Apr 15 2005 Devrim GUNDUZ
-- Added preun and postun scripts.
-* Sat Apr 09 2005 Devrim GUNDUZ
-- Initial RPM build
-- Fixed libdir so that PostgreSQL installations will not complain about it.
-- Enabled --with-geos and modified the old spec.
 
 

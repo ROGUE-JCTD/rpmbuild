@@ -1,6 +1,6 @@
 [geoshape]
 name=geoshape
-baseurl=http://yum.boundlessps.com/el6/x86_64
+baseurl=http://yum.boundlessps.com/el$releasever/$basearch
 enabled=1
 gpgcheck=1
 gpgkey=http://yum.boundlessps.com/RPM-GPG-KEY-yum.boundlessps.com
@@ -21,6 +21,6 @@ gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
 
 [rabbitmq-server]
 name=rabbitmq_rabbitmq-server
-baseurl=https://packagecloud.io/rabbitmq/rabbitmq-server/el/6/$basearch
+baseurl=https://packagecloud.io/rabbitmq/rabbitmq-server/el/$releasever/$basearch
 enabled=1
 gpgcheck=0

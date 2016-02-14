@@ -50,10 +50,16 @@ KEYSTORE=/etc/pki/java/cacerts
 database()
 {
   if [ ! -d /var/lib/pgsql/9.5/data/base ]; then
-    service postgresql-9.5 initdb
+    version=`rpm -qa \*-release | grep -Ei "redhat|centos" | cut -d"-" -f3`
+    if [ $version == 7 ];then
+      /usr/pgsql-9.5/bin/postgresql95-setup initdb
+    else
+      service postgresql-9.5 initdb
+    fi
+
     chkconfig postgresql-9.5 on
-    sed -i.geoshape "s/  peer/  trust/g" /var/lib/pgsql/9.5/data/pg_hba.conf
-    sed -i.geoshape "s/  ident/  md5/g" /var/lib/pgsql/9.5/data/pg_hba.conf
+    sed -i.geoshape 's/peer$/trust/g' /var/lib/pgsql/9.5/data/pg_hba.conf
+    sed -i.geoshape 's/ident$/md5/g' /var/lib/pgsql/9.5/data/pg_hba.conf
     service postgresql-9.5 restart > /dev/null 2>&1
   fi
   PGUSER=$(psql -U postgres -c '\du' | cut -d \| -f 1 | grep -w geoshape | wc -l)

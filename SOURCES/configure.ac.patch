@@ -1,0 +1,12 @@
+--- BUILD/libkml/configure.ac	2015-08-28 10:45:28.000000000 -0400
++++ SOURCES/configure.ac	2016-02-13 10:50:06.402000000 -0500
+@@ -20,6 +20,9 @@
+ AC_HEADER_STDBOOL
+ AC_TYPE_SIZE_T
+ 
++m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
++
++
+ dnl Let Makefile know if we are GCC.
+ AM_CONDITIONAL(GCC, test "$GCC" = yes)
+ 
