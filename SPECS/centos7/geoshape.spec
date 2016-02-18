@@ -1,7 +1,7 @@
 # Define Constants
 %define name geoshape
 %define version 1.7.11
-%define release 1%{?dist}
+%define release 2%{?dist}
 %define geonode_clone_version 1.4
 %define _unpackaged_files_terminate_build 0
 %define __os_install_post %{nil}
