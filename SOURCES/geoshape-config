@@ -23,14 +23,13 @@ usage ()
   echo '        geoshape-config stop_all'
   echo '            stops all GeoSHAPE services'
   echo '        geoshape-config init <ip or domain>'
-  echo '            chains together ssl, database, django, updateip,'
+  echo '            chains together database, django, updateip,'
   echo '            collectstatic, syncdb, selinux, start_all,'
   echo '            updatelayers, rebuildindex and createsuperuser'
   echo '        geoshape-config maploom_dev'
   echo '            modify geonode to point to the a build of maploom'
   echo '            on the host machine to speedup the edit-build-test'
   echo '            cycle of maploom'
-  echo '        geoshape-config ssl <public ip or domain>'
   exit
 }
 
@@ -45,7 +44,6 @@ GEOSERVER_DATA_DIR=/var/lib/geoserver_data
 CATALINA_ETC=/etc/tomcat8/Catalina
 PYTHON27=/var/lib/geonode/bin/python2.7
 MANAGE=/var/lib/geonode/rogue_geonode/manage.py
-KEYSTORE=/etc/pki/java/cacerts
 
 database()
 {
@@ -137,7 +135,7 @@ createsuperuser()
 updateip()
 {
   NEWIP="$VAR"
-  sed -i "s@\(SITEURL[  ]*=[  ]*\).*@\1\'https://$NEWIP\/'@g" $GEOSHAPE_ETC/local_settings.py
+  sed -i "s@\(SITEURL[  ]*=[  ]*\).*@\1\'http://$NEWIP\/'@g" $GEOSHAPE_ETC/local_settings.py
   printing_config=$GEOSERVER_DATA_DIR/printing/config.yaml
   if grep -qv "$NEWIP" "$printing_config"
   then
@@ -238,71 +236,10 @@ maploom_dev()
   ln -s /MapLoom/build/maploom.html /var/lib/geonode/lib/python2.7/site-packages/maploom/templates/maps/maploom.html
 }
 
-ssl(){
-  commonname="$VAR"
-  CONFIG=/etc/geoshape/geoshape-config.conf
-
-  # country
-  country=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^country/{print $3;exit}' "${CONFIG}")
-  [ -z "$country" ] || [ ${#country} -ge 3 ] && country="US"
-
-  # state
-  state=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^state/{print $3;exit}' "${CONFIG}")
-  [ -z "$state" ] && state="."
-
-  # locality
-  locality=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^locality/{print $3;exit}' "${CONFIG}")
-  [ -z "$locality" ] && locality="."
-
-  # organization
-  organization=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^organization/{print $3;exit}' "${CONFIG}")
-  [ -z "$organization" ] && organization="."
-
-  # organizationalunit
-  organizationalunit=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^organizationalunit/{print $3;exit}' "${CONFIG}")
-  [ -z "$organizationalunit" ] && organizationalunit="."
-
-  # email
-  email=$(awk '/^\[GEOSHAPE\]/{f=1} f==1&&/^email/{print $3;exit}' "${CONFIG}")
-  [[ "$email" != ?*@?*.?* ]] && email="admin@geoshape.org"
-
-  [ ! -d /etc/httpd/ssl ] && mkdir -p /etc/httpd/ssl
-  [ -f /etc/httpd/ssl/geoshape.key ] && rm -f /etc/httpd/ssl/geoshape.key
-  [ -f /etc/httpd/ssl/geoshape.crt ] && rm -f /etc/httpd/ssl/geoshape.crt
-  [ -f /etc/httpd/conf.d/ssl.conf ] && mv /etc/httpd/conf.d/ssl.conf /etc/httpd/conf.d/ssl.conf.off
-
-  echo "Generating key and certificate for apache"
-  # CRT and KEY files
-  openssl req -x509 -newkey rsa:2048 -keyout /etc/httpd/ssl/geoshape.key -out /etc/httpd/ssl/geoshape.crt -days 365 -subj "/C=$country/ST=$state/L=$locality/O=$organization/OU=$organizationalunit/CN=$commonname/emailAddress=$email" -nodes
-
-  echo "Importing CRT file into httplib, httplib2 and certifi/requests modules"
-  # Importing CRT into httplib2
-  cat /etc/httpd/ssl/geoshape.crt >> /var/lib/geonode/lib/python2.7/site-packages/httplib2/cacerts.txt
-  # Importing CRT into httplib2
-  cat /etc/httpd/ssl/geoshape.crt >> /etc/pki/tls/certs/ca-bundle.crt
-  # Importing cert into certifi/requests
-  cat /etc/httpd/ssl/geoshape.crt >> /var/lib/geonode/lib/python2.7/site-packages/certifi/cacert.pem
-
-  echo "Attempting to remove previous keystore entry"
-  keytool -delete -alias geoshape -keystore $KEYSTORE -storepass changeit > /dev/null 2>&1
-
-  echo "Importing CRT file into Java Keystore"
-  # Importing DER file in keystore
-  keytool -import -alias geoshape -trustcacerts -noprompt -storepass changeit -keystore $KEYSTORE -file /etc/httpd/ssl/geoshape.crt
-
-  echo "Restarting Tomcat"
-  service tomcat8 restart > /dev/null 2>&1
-  echo "Restarting uWSGI"
-  service geoshape restart > /dev/null 2>&1
-  echo "Restarting Apache httpd"
-  service httpd restart > /dev/null 2>&1
-}
-
 case "$1" in
     init)
         if [ $OPTIONS -eq 2 ];
         then
-          ssl
           database
           django
           updateip
@@ -390,15 +327,6 @@ case "$1" in
         ;;
     maploom_dev)
         maploom_dev
-        RETVAL=$?
-        ;;
-    ssl)
-        if [ $OPTIONS -eq 2 ];
-        then
-          ssl
-        else
-          echo "Usage: geoshape-config $1 <public domain or ip address>"
-        fi
         RETVAL=$?
         ;;
     *)

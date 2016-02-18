@@ -231,5 +231,7 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Wed Feb 17 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-2]
+- Disable HTTPS
 * Sat Feb 13 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-1]
 - CentOS7 support

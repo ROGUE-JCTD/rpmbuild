@@ -231,6 +231,8 @@ fi
 %doc ../SOURCES/license/GNU
 
 %changelog
+* Wed Feb 17 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-9]
+- Disable HTTPS
 * Sat Feb 13 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-8]
 - Split GeoShape
 * Fri Feb 5 2016 amirahav <arahav@boundlessgeo.com> [1.7.11-7]
