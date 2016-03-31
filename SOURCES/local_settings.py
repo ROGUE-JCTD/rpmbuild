@@ -4,7 +4,7 @@ from geoshape.settings import INSTALLED_APPS
 
 SITENAME = 'GeoSHAPE'
 SITEURL = 'http://localhost/'
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['localhost']
 
