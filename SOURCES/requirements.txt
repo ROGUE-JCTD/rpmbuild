@@ -83,4 +83,4 @@ transifex-client==0.11
 Unidecode==0.4.19
 uWSGI==2.0.12
 wheel==0.29.0
-urllib3==1.14
+urllib3==1.26.5
